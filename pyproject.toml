@@ -23,4 +23,6 @@ disable = [
     "too-few-public-methods",
     "arguments-differ",
     "bare-except",  # checked by flake8
+    "no-else-return",
+    "too-many-locals"
 ]
