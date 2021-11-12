@@ -5,7 +5,7 @@
 
 """CV-Pruner main package."""
 
-from cv_pruner.cv_pruner import check_against_threshold, check_no_features_selected, Method
+from cv_pruner.cv_pruner import Method, check_against_threshold, check_no_features_selected
 
 
 __version__ = "0.0.1rc1"
