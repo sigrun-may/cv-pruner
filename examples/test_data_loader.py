@@ -4,7 +4,7 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from data.data_loader import load_colon_data, load_leukemia_data, load_prostate_data
+from examples.data_loader import load_colon_data, load_leukemia_data, load_prostate_data
 
 
 def test_load_colon_data():
