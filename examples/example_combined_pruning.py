@@ -1,3 +1,8 @@
+# Copyright (c) 2021 Sigrun May, Helmholtz-Zentrum für Infektionsforschung GmbH (HZI)
+# Copyright (c) 2021 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften
+# This software is distributed under the terms of the MIT license
+# which is available at https://opensource.org/licenses/MIT
+
 """Accelerating embedded feature selection with combined pruning."""
 
 import math
