@@ -68,7 +68,7 @@ def _extrapolate_metric(validation_metric_history: List[float], method: Method) 
 
 def check_against_threshold(
     current_step_of_complete_nested_cross_validation: int,
-    all_steps: int,
+    folds_outer_cv: int,
     folds_inner_cv: int,
     validation_metric_history: List[float],
     threshold_for_pruning: float,
@@ -83,7 +83,8 @@ def check_against_threshold(
 
     Args:
         current_step_of_complete_nested_cross_validation: one based step of complete nested cross-validation.
-        all_steps: total absolute number of steps for complete nested cross-validation (one based).
+        folds_outer_cv: absolute number of folds for the outer cross validation loop (one based):
+                        set zero for standard cross-validation.
         folds_inner_cv: absolute number of folds for the inner cross validation loop (one based).
         validation_metric_history: list of all previously calculated performance evaluation metrics.
         threshold_for_pruning: threshold which must not be exceeded (minimizing) or fallen below (maximizing).
@@ -101,15 +102,14 @@ def check_against_threshold(
         current_step_inner_cv = folds_inner_cv
     prune = False
 
-    # starts calculating after half of the inner k-fold cross-validation of the nested cross-validation and a minimum  # noqa: E501
-    # of four steps
-    # first third of all inner cross-validation loops
-    first_third_of_complete_nested_cross_validation = ((all_steps % folds_inner_cv) / 3) * folds_inner_cv
+    first_third_of_complete_nested_cross_validation = folds_outer_cv / 3
 
-    # in case of cross-validation only one "inner-loop" is calculated
-    if first_third_of_complete_nested_cross_validation == 0:
-        first_third_of_complete_nested_cross_validation = folds_inner_cv
+    # in case of standard cross-validation only one "inner-loop" is calculated
+    if folds_outer_cv == 0:
+        first_third_of_complete_nested_cross_validation = float("inf")
 
+    # starts calculating after half of the inner k-fold cross-validation of the
+    # nested cross-validation and a minimum of four steps
     if (
         current_step_of_complete_nested_cross_validation
         >= math.floor(folds_inner_cv / 2)

@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2021 Sigrun May, Helmholtz-Zentrum für Infektionsforschung GmbH (HZI)
 # Copyright (c) 2021 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
+
+"""Tests for data loaders."""
 
 from examples.data_loader import load_colon_data, load_leukemia_data, load_prostate_data
 

@@ -83,7 +83,7 @@ def load_prostate_data() -> Tuple[pd.Series, pd.DataFrame]:
 
     # labels
     labels = []
-    for label in df.columns:
+    for label in df.columns:  # pylint:disable=no-member
         if "control" in label:
             labels.append(0)
         elif "cancer" in label:
@@ -111,7 +111,7 @@ def load_leukemia_data() -> Tuple[pd.Series, pd.DataFrame]:
 
     # labels
     labels = []
-    for label in df.columns:
+    for label in df.columns:  # pylint:disable=no-member
         if "ALL" in label:
             labels.append(0)
         elif "AML" in label:
