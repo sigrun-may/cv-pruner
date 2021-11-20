@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from cv_pruner import Method, check_against_threshold, check_no_features_selected
+from cv_pruner import Method, should_prune_against_threshold, no_features_selected
 
 
 def test_check_against_threshold_false():
@@ -20,7 +20,7 @@ def test_check_against_threshold_false():
         0.5881211822461981,
     ]
 
-    result = check_against_threshold(
+    result = should_prune_against_threshold(
         current_step_of_complete_nested_cross_validation=8,
         folds_outer_cv=13,
         folds_inner_cv=8,
@@ -47,7 +47,7 @@ def test_check_against_threshold_true():
         0.5881211822461981,
     ]
 
-    result = check_against_threshold(
+    result = should_prune_against_threshold(
         current_step_of_complete_nested_cross_validation=8,
         folds_outer_cv=13,
         folds_inner_cv=8,
@@ -73,7 +73,7 @@ def test_standard_cross_validation_true():
         0.5881211822461981,
     ]
 
-    result = check_against_threshold(
+    result = should_prune_against_threshold(
         current_step_of_complete_nested_cross_validation=8,
         folds_outer_cv=0,
         folds_inner_cv=8,
@@ -89,41 +89,41 @@ def test_standard_cross_validation_true():
 
 def test_check_no_features_selected_ndarray_false_negative():
     feature_importances = np.array([0.0, 0.0, -0.1])
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert not no_features_selected
 
 
 def test_check_no_features_selected_ndarray_false():
     feature_importances = np.array([0.0, 0.0, 0.1])
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert not no_features_selected
 
 
 def test_check_no_features_selected_ndarray_true():
     feature_importances = np.array([0.0, 0.0, 0.0])
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert no_features_selected
 
 
 def test_check_no_features_selected_list_false_negative():
     feature_importances = [0.0, 0.0, -0.1]
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert not no_features_selected
 
 
 def test_check_no_features_selected_list_true():
     feature_importances = [0.0, 0.0, 0.0]
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert no_features_selected
 
 
 def test_check_no_features_selected_list_false():
     feature_importances = [0.0, 0.0, 0.1]
-    no_features_selected = check_no_features_selected(feature_importances)
+    no_features_selected = no_features_selected(feature_importances)
 
     assert not no_features_selected

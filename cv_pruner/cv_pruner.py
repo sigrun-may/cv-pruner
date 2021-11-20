@@ -66,7 +66,7 @@ def _extrapolate_metric(validation_metric_history: List[float], method: Method) 
         return median_validation_metric
 
 
-def check_against_threshold(
+def should_prune_against_threshold(
     current_step_of_complete_nested_cross_validation: int,
     folds_outer_cv: int,
     folds_inner_cv: int,
@@ -150,7 +150,7 @@ def check_against_threshold(
     return prune
 
 
-def check_no_features_selected(feature_importances: Union[np.ndarray, List[float]]) -> bool:
+def no_features_selected(feature_importances: Union[np.ndarray, List[float]]) -> bool:
     """Pruner to detect semantically meaningless trials.
 
     Prune if a trial includes a training result without any selected features.

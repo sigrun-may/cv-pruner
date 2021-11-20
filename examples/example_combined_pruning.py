@@ -83,10 +83,10 @@ def _optuna_objective(trial):
             validation_metric_history.append(model.best_score["valid_0"]["binary_logloss"])
 
             selected_features = model.feature_importance(importance_type="gain")
-            if cv_pruner.check_no_features_selected(selected_features):
+            if cv_pruner.no_features_selected(selected_features):
                 raise TrialPruned()
 
-            if cv_pruner.check_against_threshold(
+            if cv_pruner.should_prune_against_threshold(
                 current_step_of_complete_nested_cross_validation,
                 folds_outer_cv=data.shape[0],  # leave one out cross-validation
                 folds_inner_cv=inner_folds,
