@@ -89,41 +89,30 @@ def test_standard_cross_validation_true():
 
 def test_check_no_features_selected_ndarray_false_negative():
     feature_importances = np.array([0.0, 0.0, -0.1])
-    no_features_selected = no_features_selected(feature_importances)
-
-    assert not no_features_selected
+    assert not no_features_selected(feature_importances)
 
 
 def test_check_no_features_selected_ndarray_false():
     feature_importances = np.array([0.0, 0.0, 0.1])
-    no_features_selected = no_features_selected(feature_importances)
-
-    assert not no_features_selected
+    assert not no_features_selected(feature_importances)
 
 
 def test_check_no_features_selected_ndarray_true():
     feature_importances = np.array([0.0, 0.0, 0.0])
-    no_features_selected = no_features_selected(feature_importances)
-
-    assert no_features_selected
+    assert no_features_selected(feature_importances)
 
 
 def test_check_no_features_selected_list_false_negative():
     feature_importances = [0.0, 0.0, -0.1]
-    no_features_selected = no_features_selected(feature_importances)
-
-    assert not no_features_selected
+    assert not no_features_selected(feature_importances)
 
 
 def test_check_no_features_selected_list_true():
     feature_importances = [0.0, 0.0, 0.0]
-    no_features_selected = no_features_selected(feature_importances)
-
-    assert no_features_selected
+    assert no_features_selected(feature_importances)
 
 
 def test_check_no_features_selected_list_false():
     feature_importances = [0.0, 0.0, 0.1]
-    no_features_selected = no_features_selected(feature_importances)
+    assert not no_features_selected(feature_importances)
 
-    assert not no_features_selected
