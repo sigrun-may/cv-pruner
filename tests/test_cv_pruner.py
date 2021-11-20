@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from cv_pruner import Method, should_prune_against_threshold, no_features_selected
+from cv_pruner import Method, no_features_selected, should_prune_against_threshold
 
 
 def test_check_against_threshold_false():
@@ -115,4 +115,3 @@ def test_check_no_features_selected_list_true():
 def test_check_no_features_selected_list_false():
     feature_importances = [0.0, 0.0, 0.1]
     assert not no_features_selected(feature_importances)
-
