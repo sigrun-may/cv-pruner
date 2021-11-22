@@ -8,7 +8,7 @@
 from cv_pruner.cv_pruner import Method, no_features_selected, should_prune_against_threshold
 
 
-__version__ = "0.0.1rc2"
+__version__ = "0.0.1rc3"
 
 __all__ = [
     "should_prune_against_threshold",
