@@ -5,6 +5,9 @@
 [![Static Code Checks](https://github.com/sigrun-may/cv-pruner/actions/workflows/static_checks.yml/badge.svg)](https://github.com/sigrun-may/cv-pruner/actions/workflows/static_checks.yml)
 [![GitHub issues](https://img.shields.io/github/issues-raw/sigrun-may/cv-pruner)](https://github.com/sigrun-may/cv-pruner/issues)
 
+Nested cross-validation is necessary to avoid biased model performance when selecting embedded features in high-dimensional data with tiny sample sizes. Standard pruning algorithms to accelerate hyperparameter optimization must prune late or risk aborting computations of promising hyperparameter sets due to high variance in the
+Performance evaluation metric. The cv-pruner allows combining a comparison-based pruning strategy with two additional pruning strategies based on domain or prior knowledge. One of them removes semantically meaningless trials. The other is a threshold-based pruning strategy that extrapolates the performance evaluation metric. The combination of pruning strategies can lead to a massive speedup in computation. 
+
 ## Installation
 
 CV-Pruner is available at [the Python Package Index (PyPI)](https://pypi.org/project/cv-pruner/).
