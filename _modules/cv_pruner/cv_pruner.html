@@ -89,18 +89,17 @@
     <span class="sd">&quot;&quot;&quot;Extrapolation method for the threshold-based pruner.</span>
 
 <span class="sd">    Options:</span>
-<span class="sd">    MEDIAN = No extrapolation. Pruning against the current median.</span>
-<span class="sd">    MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</span>
-<span class="sd">    optimization direction to optimize as a basis for extrapolation of missing</span>
-<span class="sd">    performance evaluation metrics of the complete inner cross-validation.</span>
-<span class="sd">    MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</span>
-<span class="sd">    optimization direction to optimize as a basis for extrapolating missing</span>
-<span class="sd">    performance evaluation metrics of the complete inner cross-validation.</span>
-<span class="sd">    OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</span>
-<span class="sd">    basis for extrapolation of missing performance evaluation metrics of the</span>
-<span class="sd">    complete inner cross-validation.</span>
+<span class="sd">        MEDIAN = No extrapolation. Pruning against the current median.</span>
+<span class="sd">        MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</span>
+<span class="sd">            optimization direction to optimize as a basis for extrapolation of missing</span>
+<span class="sd">            performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">        MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</span>
+<span class="sd">            optimization direction to optimize as a basis for extrapolating missing</span>
+<span class="sd">            performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">        OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</span>
+<span class="sd">            basis for extrapolation of missing performance evaluation metrics of the</span>
+<span class="sd">            complete inner cross-validation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="c1"># No extrapolation. Prune against the current median.</span>
     <span class="n">MEDIAN</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -170,15 +169,16 @@
 <span class="sd">        folds_inner_cv: Absolute number of folds for the inner cross</span>
 <span class="sd">            validation loop (one based).</span>
 <span class="sd">        validation_metric_history: List of all previously calculated performance evaluation metric values.</span>
-<span class="sd">        threshold_for_pruning: Threshold that should not be exceeded (</span>
-<span class="sd">            minimizing) or fallen below (maximizing).</span>
+<span class="sd">        threshold_for_pruning: Threshold that should not be exceeded</span>
+<span class="sd">        (minimizing) or fallen below (maximizing).</span>
 <span class="sd">        direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.</span>
 <span class="sd">        optimal_metric: Optimal value for the performance evaluation metric.</span>
 <span class="sd">        method: The extrapolation method to be used (see Method).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        If the trial should be pruned. TRUE if it is likely that the final</span>
-<span class="sd">        performance evaluation metric will exceed the upper threshold or fall below the lower threshold.</span>
+<span class="sd">        performance evaluation metric will exceed the upper threshold or</span>
+<span class="sd">        fall below the lower threshold respectively.</span>
 <span class="sd">        FALSE otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">current_step_inner_cv</span> <span class="o">=</span> <span class="n">current_step_of_complete_nested_cross_validation</span> <span class="o">%</span> <span class="n">folds_inner_cv</span>

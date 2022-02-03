@@ -84,17 +84,23 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cv_pruner.</span></span><span class="sig-name descname"><span class="pre">Method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cv_pruner/cv_pruner.html#Method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cv_pruner.Method" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
 <p>Extrapolation method for the threshold-based pruner.</p>
-<p>Options:
-MEDIAN = No extrapolation. Pruning against the current median.
-MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
-optimization direction to optimize as a basis for extrapolation of missing
-performance evaluation metrics of the complete inner cross-validation.
-MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
-optimization direction to optimize as a basis for extrapolating missing
-performance evaluation metrics of the complete inner cross-validation.
-OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
-basis for extrapolation of missing performance evaluation metrics of the
+<dl>
+<dt>Options:</dt><dd><p>MEDIAN = No extrapolation. Pruning against the current median.
+MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</p>
+<blockquote>
+<div><p>optimization direction to optimize as a basis for extrapolation of missing
+performance evaluation metrics of the complete inner cross-validation.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</dt><dd><p>optimization direction to optimize as a basis for extrapolating missing
+performance evaluation metrics of the complete inner cross-validation.</p>
+</dd>
+<dt>OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</dt><dd><p>basis for extrapolation of missing performance evaluation metrics of the
 complete inner cross-validation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -135,8 +141,8 @@ based): Set to zero for standard cross-validation.</p></li>
 <li><p><strong>folds_inner_cv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Absolute number of folds for the inner cross
 validation loop (one based).</p></li>
 <li><p><strong>validation_metric_history</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – List of all previously calculated performance evaluation metric values.</p></li>
-<li><p><strong>threshold_for_pruning</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Threshold that should not be exceeded (
-minimizing) or fallen below (maximizing).</p></li>
+<li><p><strong>threshold_for_pruning</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Threshold that should not be exceeded</p></li>
+<li><p><strong>below</strong> (<em>(</em><em>minimizing</em><em>) or </em><em>fallen</em>) – </p></li>
 <li><p><strong>direction_to_optimize_is_minimize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – True - in case of minimizing and False - in case of maximizing.</p></li>
 <li><p><strong>optimal_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Optimal value for the performance evaluation metric.</p></li>
 <li><p><strong>method</strong> (<a class="reference internal" href="#cv_pruner.Method" title="cv_pruner.cv_pruner.Method"><em>cv_pruner.cv_pruner.Method</em></a>) – The extrapolation method to be used (see Method).</p></li>
@@ -144,7 +150,8 @@ minimizing) or fallen below (maximizing).</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>If the trial should be pruned. TRUE if it is likely that the final
-performance evaluation metric will exceed the upper threshold or fall below the lower threshold.
+performance evaluation metric will exceed the upper threshold or
+fall below the lower threshold respectively.
 FALSE otherwise.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
