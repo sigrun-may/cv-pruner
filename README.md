@@ -1,4 +1,4 @@
-# CV-Pruner
+# Pruner for nested cross-validation - [Sphinx-Doc](https://sigrun-may.github.io/cv-pruner/)
 
 [![MIT License](https://img.shields.io/github/license/sigrun-may/cv-pruner)](https://github.com/sigrun-may/cv-pruner/blob/main/LICENSE)
 [![pytest](https://github.com/sigrun-may/cv-pruner/actions/workflows/pytest.yml/badge.svg)](https://github.com/sigrun-may/cv-pruner/actions/workflows/pytest.yml)
