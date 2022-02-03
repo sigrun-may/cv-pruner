@@ -88,17 +88,20 @@
 <div class="viewcode-block" id="Method"><a class="viewcode-back" href="../../code-doc.html#cv_pruner.Method">[docs]</a><span class="k">class</span> <span class="nc">Method</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Extrapolation method for the threshold-based pruner.</span>
 
-<span class="sd">    Options:</span>
-<span class="sd">        MEDIAN = No extrapolation. Pruning against the current median.</span>
-<span class="sd">        MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</span>
-<span class="sd">            optimization direction to optimize as a basis for extrapolation of missing</span>
-<span class="sd">            performance evaluation metrics of the complete inner cross-validation.</span>
-<span class="sd">        MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</span>
-<span class="sd">            optimization direction to optimize as a basis for extrapolating missing</span>
-<span class="sd">            performance evaluation metrics of the complete inner cross-validation.</span>
-<span class="sd">        OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</span>
-<span class="sd">            basis for extrapolation of missing performance evaluation metrics of the</span>
-<span class="sd">            complete inner cross-validation.</span>
+<span class="sd">    MEDIAN</span>
+<span class="sd">        No extrapolation. Pruning against the current median.</span>
+<span class="sd">    MAX_DEVIATION_TO_MEDIAN</span>
+<span class="sd">        Maximum deviation from the median in the</span>
+<span class="sd">        optimization direction to optimize as a basis for extrapolation of missing</span>
+<span class="sd">        performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">    MEAN_DEVIATION_TO_MEDIAN</span>
+<span class="sd">        Mean deviation from the median in the</span>
+<span class="sd">        optimization direction to optimize as a basis for extrapolating missing</span>
+<span class="sd">        performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">    OPTIMAL_METRIC</span>
+<span class="sd">        Optimal value for the performance evaluation metric as</span>
+<span class="sd">        basis for extrapolation of missing performance evaluation metrics of the</span>
+<span class="sd">        complete inner cross-validation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># No extrapolation. Prune against the current median.</span>

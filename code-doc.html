@@ -84,21 +84,20 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cv_pruner.</span></span><span class="sig-name descname"><span class="pre">Method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cv_pruner/cv_pruner.html#Method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cv_pruner.Method" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
 <p>Extrapolation method for the threshold-based pruner.</p>
-<dl>
-<dt>Options:</dt><dd><p>MEDIAN = No extrapolation. Pruning against the current median.
-MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</p>
-<blockquote>
-<div><p>optimization direction to optimize as a basis for extrapolation of missing
-performance evaluation metrics of the complete inner cross-validation.</p>
-</div></blockquote>
 <dl class="simple">
-<dt>MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</dt><dd><p>optimization direction to optimize as a basis for extrapolating missing
+<dt>MEDIAN</dt><dd><p>No extrapolation. Pruning against the current median.</p>
+</dd>
+<dt>MAX_DEVIATION_TO_MEDIAN</dt><dd><p>Maximum deviation from the median in the
+optimization direction to optimize as a basis for extrapolation of missing
 performance evaluation metrics of the complete inner cross-validation.</p>
 </dd>
-<dt>OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</dt><dd><p>basis for extrapolation of missing performance evaluation metrics of the
-complete inner cross-validation.</p>
+<dt>MEAN_DEVIATION_TO_MEDIAN</dt><dd><p>Mean deviation from the median in the
+optimization direction to optimize as a basis for extrapolating missing
+performance evaluation metrics of the complete inner cross-validation.</p>
 </dd>
-</dl>
+<dt>OPTIMAL_METRIC</dt><dd><p>Optimal value for the performance evaluation metric as
+basis for extrapolation of missing performance evaluation metrics of the
+complete inner cross-validation.</p>
 </dd>
 </dl>
 </dd></dl>
