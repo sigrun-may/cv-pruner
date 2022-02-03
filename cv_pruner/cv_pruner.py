@@ -29,6 +29,7 @@ class Method(Enum):
     basis for extrapolation of missing performance evaluation metrics of the
     complete inner cross-validation.
     """
+
     # No extrapolation. Prune against the current median.
     MEDIAN = 0
 
