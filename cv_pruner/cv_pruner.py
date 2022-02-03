@@ -174,7 +174,7 @@ def no_features_selected(feature_importances: Union[np.ndarray, List[float]]) ->
 
     Args:
         feature_importances: Weights, importances or coefficients for each
-        feature after training.
+            feature after training.
 
     Returns:
         If a trial should be pruned. TRUE if a trial includes a training
