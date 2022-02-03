@@ -21,7 +21,7 @@ from typing import List
 # -- Project information -----------------------------------------------------
 
 project = "CV-Pruner"
-copyright = "2021, Sigrun May"
+copyright = "2022, Sigrun May"
 author = "Sigrun May"
 
 
