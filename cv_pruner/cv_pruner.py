@@ -17,17 +17,20 @@ import numpy as np
 class Method(Enum):
     """Extrapolation method for the threshold-based pruner.
 
-    Options:
-        MEDIAN = No extrapolation. Pruning against the current median.
-        MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
-            optimization direction to optimize as a basis for extrapolation of missing
-            performance evaluation metrics of the complete inner cross-validation.
-        MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
-            optimization direction to optimize as a basis for extrapolating missing
-            performance evaluation metrics of the complete inner cross-validation.
-        OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
-            basis for extrapolation of missing performance evaluation metrics of the
-            complete inner cross-validation.
+    MEDIAN
+        No extrapolation. Pruning against the current median.
+    MAX_DEVIATION_TO_MEDIAN
+        Maximum deviation from the median in the
+        optimization direction to optimize as a basis for extrapolation of missing
+        performance evaluation metrics of the complete inner cross-validation.
+    MEAN_DEVIATION_TO_MEDIAN
+        Mean deviation from the median in the
+        optimization direction to optimize as a basis for extrapolating missing
+        performance evaluation metrics of the complete inner cross-validation.
+    OPTIMAL_METRIC
+        Optimal value for the performance evaluation metric as
+        basis for extrapolation of missing performance evaluation metrics of the
+        complete inner cross-validation.
     """
 
     # No extrapolation. Prune against the current median.
