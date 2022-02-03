@@ -18,18 +18,17 @@ class Method(Enum):
     """Extrapolation method for the threshold-based pruner.
 
     Options:
-    MEDIAN = No extrapolation. Pruning against the current median.
-    MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
-    optimization direction to optimize as a basis for extrapolation of missing
-    performance evaluation metrics of the complete inner cross-validation.
-    MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
-    optimization direction to optimize as a basis for extrapolating missing
-    performance evaluation metrics of the complete inner cross-validation.
-    OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
-    basis for extrapolation of missing performance evaluation metrics of the
-    complete inner cross-validation.
+        MEDIAN = No extrapolation. Pruning against the current median.
+        MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
+            optimization direction to optimize as a basis for extrapolation of missing
+            performance evaluation metrics of the complete inner cross-validation.
+        MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
+            optimization direction to optimize as a basis for extrapolating missing
+            performance evaluation metrics of the complete inner cross-validation.
+        OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
+            basis for extrapolation of missing performance evaluation metrics of the
+            complete inner cross-validation.
     """
-
     # No extrapolation. Prune against the current median.
     MEDIAN = 0
 
@@ -99,15 +98,16 @@ def should_prune_against_threshold(
         folds_inner_cv: Absolute number of folds for the inner cross
             validation loop (one based).
         validation_metric_history: List of all previously calculated performance evaluation metric values.
-        threshold_for_pruning: Threshold that should not be exceeded (
-            minimizing) or fallen below (maximizing).
+        threshold_for_pruning: Threshold that should not be exceeded
+        (minimizing) or fallen below (maximizing).
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
         optimal_metric: Optimal value for the performance evaluation metric.
         method: The extrapolation method to be used (see Method).
 
     Returns:
         If the trial should be pruned. TRUE if it is likely that the final
-        performance evaluation metric will exceed the upper threshold or fall below the lower threshold.
+        performance evaluation metric will exceed the upper threshold or
+        fall below the lower threshold respectively.
         FALSE otherwise.
     """
     current_step_inner_cv = current_step_of_complete_nested_cross_validation % folds_inner_cv
