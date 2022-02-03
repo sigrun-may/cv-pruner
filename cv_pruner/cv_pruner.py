@@ -172,13 +172,14 @@ def should_prune_against_threshold(
 def no_features_selected(feature_importances: Union[np.ndarray, List[float]]) -> bool:
     """Pruner to detect semantically meaningless trials.
 
-    Prune if a trial includes a training result without any selected features.
-
     Args:
-        feature_importances: weights or importances for each feature after training
+        feature_importances: Weights, importances or coefficients for each
+        feature after training.
 
     Returns:
-        If a trial should be pruned.
+        If a trial should be pruned. TRUE if a trial includes a training
+        result without any selected features. FALSE otherwise.
+
     """
     if isinstance(feature_importances, list):
         feature_importances = np.array(feature_importances)
