@@ -100,7 +100,7 @@ def should_prune_against_threshold(
             validation loop (one based).
         validation_metric_history: List of all previously calculated performance evaluation metric values.
         threshold_for_pruning: Threshold that should not be exceeded
-        (minimizing) or fallen below (maximizing).
+            (minimizing) or fallen below (maximizing).
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
         optimal_metric: Optimal value for the performance evaluation metric.
         method: The extrapolation method to be used (see Method).
