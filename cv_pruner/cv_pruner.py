@@ -91,25 +91,24 @@ def should_prune_against_threshold(
 ) -> bool:
     """Pruner to detect an invalid performance evaluation value of a trial.
 
-    Prune if a metric exceeds the upper threshold or falls behind the lower
-    threshold.
-
     Args:
         current_step_of_complete_nested_cross_validation: One based step of the
-        complete nested cross-validation.
+            complete nested cross-validation.
         folds_outer_cv: Absolute number of folds for the outer cross-validation loop (one
-        based): Set to zero for standard cross-validation.
+            based): Set to zero for standard cross-validation.
         folds_inner_cv: Absolute number of folds for the inner cross
-        validation loop (one based).
+            validation loop (one based).
         validation_metric_history: List of all previously calculated performance evaluation metric values.
         threshold_for_pruning: Threshold that should not be exceeded (
-        minimizing) or fallen below (maximizing).
+            minimizing) or fallen below (maximizing).
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
         optimal_metric: Optimal value for the performance evaluation metric.
         method: The extrapolation method to be used (see Method).
 
     Returns:
-        If the trial should be pruned.
+        If the trial should be pruned. TRUE if it is likely that the final
+        performance evaluation metric will exceed the upper threshold or fall below the lower threshold.
+        FALSE otherwise.
     """
     current_step_inner_cv = current_step_of_complete_nested_cross_validation % folds_inner_cv
 
