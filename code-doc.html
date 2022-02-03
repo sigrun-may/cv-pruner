@@ -83,7 +83,18 @@
 <dt class="sig sig-object py" id="cv_pruner.Method">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cv_pruner.</span></span><span class="sig-name descname"><span class="pre">Method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cv_pruner/cv_pruner.html#Method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cv_pruner.Method" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>The extrapolation method.</p>
+<p>Extrapolation method for the threshold-based pruner.</p>
+<p>Options:
+MEDIAN = No extrapolation. Pruning against the current median.
+MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
+optimization direction to optimize as a basis for extrapolation of missing
+performance evaluation metrics of the complete inner cross-validation.
+MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
+optimization direction to optimize as a basis for extrapolating missing
+performance evaluation metrics of the complete inner cross-validation.
+OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
+basis for extrapolation of missing performance evaluation metrics of the
+complete inner cross-validation.</p>
 </dd></dl>
 
 </section>
@@ -113,21 +124,24 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="cv_pruner.should_prune_against_threshold">
 <span class="sig-prename descclassname"><span class="pre">cv_pruner.</span></span><span class="sig-name descname"><span class="pre">should_prune_against_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_step_of_complete_nested_cross_validation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folds_outer_cv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folds_inner_cv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_metric_history</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_for_pruning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction_to_optimize_is_minimize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimal_metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Method.OPTIMAL_METRIC</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cv_pruner/cv_pruner.html#should_prune_against_threshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cv_pruner.should_prune_against_threshold" title="Permalink to this definition"></a></dt>
-<dd><p>Pruner to detect invalid metrics of the trials.</p>
-<p>Prune if a metric exceeds upper threshold,
-falls behind lower threshold.</p>
+<dd><p>Pruner to detect an invalid performance evaluation value of a trial.</p>
+<p>Prune if a metric exceeds the upper threshold or falls behind the lower
+threshold.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>current_step_of_complete_nested_cross_validation</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – one based step of complete nested cross-validation.</p></li>
-<li><p><strong>folds_outer_cv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – absolute number of folds for the outer cross validation loop (one based):
-set zero for standard cross-validation.</p></li>
-<li><p><strong>folds_inner_cv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – absolute number of folds for the inner cross validation loop (one based).</p></li>
-<li><p><strong>validation_metric_history</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – list of all previously calculated performance evaluation metrics.</p></li>
-<li><p><strong>threshold_for_pruning</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – threshold which must not be exceeded (minimizing) or fallen below (maximizing).</p></li>
+<li><p><strong>current_step_of_complete_nested_cross_validation</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – One based step of the</p></li>
+<li><p><strong>cross-validation.</strong> (<em>complete nested</em>) – </p></li>
+<li><p><strong>folds_outer_cv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Absolute number of folds for the outer cross-validation loop (one</p></li>
+<li><p><strong>based</strong><strong>)</strong> – Set to zero for standard cross-validation.</p></li>
+<li><p><strong>folds_inner_cv</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Absolute number of folds for the inner cross</p></li>
+<li><p><strong>loop</strong> (<em>validation</em>) – </p></li>
+<li><p><strong>validation_metric_history</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.10)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em>) – List of all previously calculated performance evaluation metric values.</p></li>
+<li><p><strong>threshold_for_pruning</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Threshold that should not be exceeded (</p></li>
+<li><p><strong>below</strong> (<em>minimizing</em><em>) or </em><em>fallen</em>) – </p></li>
 <li><p><strong>direction_to_optimize_is_minimize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – True - in case of minimizing and False - in case of maximizing.</p></li>
-<li><p><strong>optimal_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – optimal value for the performance evaluation metric.</p></li>
-<li><p><strong>method</strong> (<a class="reference internal" href="#cv_pruner.Method" title="cv_pruner.cv_pruner.Method"><em>cv_pruner.cv_pruner.Method</em></a>) – The extrapolation method to be used.</p></li>
+<li><p><strong>optimal_metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Optimal value for the performance evaluation metric.</p></li>
+<li><p><strong>method</strong> (<a class="reference internal" href="#cv_pruner.Method" title="cv_pruner.cv_pruner.Method"><em>cv_pruner.cv_pruner.Method</em></a>) – The extrapolation method to be used (see Method).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

@@ -86,8 +86,20 @@
 
 
 <div class="viewcode-block" id="Method"><a class="viewcode-back" href="../../code-doc.html#cv_pruner.Method">[docs]</a><span class="k">class</span> <span class="nc">Method</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The extrapolation method.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Extrapolation method for the threshold-based pruner.</span>
 
+<span class="sd">    Options:</span>
+<span class="sd">    MEDIAN = No extrapolation. Pruning against the current median.</span>
+<span class="sd">    MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the</span>
+<span class="sd">    optimization direction to optimize as a basis for extrapolation of missing</span>
+<span class="sd">    performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">    MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the</span>
+<span class="sd">    optimization direction to optimize as a basis for extrapolating missing</span>
+<span class="sd">    performance evaluation metrics of the complete inner cross-validation.</span>
+<span class="sd">    OPTIMAL_METRIC = Optimal value for the performance evaluation metric as</span>
+<span class="sd">    basis for extrapolation of missing performance evaluation metrics of the</span>
+<span class="sd">    complete inner cross-validation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># No extrapolation. Prune against the current median.</span>
     <span class="n">MEDIAN</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -147,21 +159,24 @@
     <span class="n">optimal_metric</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMAL_METRIC</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Pruner to detect invalid metrics of the trials.</span>
+    <span class="sd">&quot;&quot;&quot;Pruner to detect an invalid performance evaluation value of a trial.</span>
 
-<span class="sd">    Prune if a metric exceeds upper threshold,</span>
-<span class="sd">    falls behind lower threshold.</span>
+<span class="sd">    Prune if a metric exceeds the upper threshold or falls behind the lower</span>
+<span class="sd">    threshold.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        current_step_of_complete_nested_cross_validation: one based step of complete nested cross-validation.</span>
-<span class="sd">        folds_outer_cv: absolute number of folds for the outer cross validation loop (one based):</span>
-<span class="sd">                        set zero for standard cross-validation.</span>
-<span class="sd">        folds_inner_cv: absolute number of folds for the inner cross validation loop (one based).</span>
-<span class="sd">        validation_metric_history: list of all previously calculated performance evaluation metrics.</span>
-<span class="sd">        threshold_for_pruning: threshold which must not be exceeded (minimizing) or fallen below (maximizing).</span>
+<span class="sd">        current_step_of_complete_nested_cross_validation: One based step of the</span>
+<span class="sd">        complete nested cross-validation.</span>
+<span class="sd">        folds_outer_cv: Absolute number of folds for the outer cross-validation loop (one</span>
+<span class="sd">        based): Set to zero for standard cross-validation.</span>
+<span class="sd">        folds_inner_cv: Absolute number of folds for the inner cross</span>
+<span class="sd">        validation loop (one based).</span>
+<span class="sd">        validation_metric_history: List of all previously calculated performance evaluation metric values.</span>
+<span class="sd">        threshold_for_pruning: Threshold that should not be exceeded (</span>
+<span class="sd">        minimizing) or fallen below (maximizing).</span>
 <span class="sd">        direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.</span>
-<span class="sd">        optimal_metric: optimal value for the performance evaluation metric.</span>
-<span class="sd">        method: The extrapolation method to be used.</span>
+<span class="sd">        optimal_metric: Optimal value for the performance evaluation metric.</span>
+<span class="sd">        method: The extrapolation method to be used (see Method).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        If the trial should be pruned.</span>
