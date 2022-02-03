@@ -20,17 +20,17 @@ class Method(Enum):
     MEDIAN
         No extrapolation. Pruning against the current median.
     MAX_DEVIATION_TO_MEDIAN
-        Maximum deviation from the median in the
-        optimization direction to optimize as a basis for extrapolation of missing
-        performance evaluation metrics of the complete inner cross-validation.
+        Maximum deviation from the median in direction to optimize
+        serves as basis for the extrapolation of missing performance
+        evaluation values of the complete inner cross-validation.
     MEAN_DEVIATION_TO_MEDIAN
-        Mean deviation from the median in the
-        optimization direction to optimize as a basis for extrapolating missing
-        performance evaluation metrics of the complete inner cross-validation.
+        Mean deviation from the median in direction to optimize
+        serves as basis for the extrapolation of missing performance
+        evaluation values of the complete inner cross-validation.
     OPTIMAL_METRIC
-        Optimal value for the performance evaluation metric as
-        basis for extrapolation of missing performance evaluation metrics of the
-        complete inner cross-validation.
+        Optimal value for the performance evaluation metric serves as basis
+        for the extrapolation of missing performance
+        evaluation values of the complete inner cross-validation.
     """
 
     # No extrapolation. Prune against the current median.
