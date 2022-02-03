@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cv_pruner.cv_pruner &mdash; CV-Pruner  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> CV-Pruner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code-doc.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sigrun-may/cv-pruner/blob/main/LICENSE">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sigrun-may/cv-pruner">GitHub Repository</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CV-Pruner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>cv_pruner.cv_pruner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cv_pruner.cv_pruner</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2021 Sigrun May, Helmholtz-Zentrum für Infektionsforschung GmbH (HZI)</span>
+<span class="c1"># Copyright (c) 2021 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften</span>
+<span class="c1"># This software is distributed under the terms of the MIT license</span>
+<span class="c1"># which is available at https://opensource.org/licenses/MIT</span>
+
+
+<span class="sd">&quot;&quot;&quot;Pruner for hyperparameter optimization with nested cross-validation and high variance.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">statistics</span> <span class="kn">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">median</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Method"><a class="viewcode-back" href="../../code-doc.html#cv_pruner.Method">[docs]</a><span class="k">class</span> <span class="nc">Method</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The extrapolation method.&quot;&quot;&quot;</span>
+
+    <span class="c1"># No extrapolation. Prune against the current median.</span>
+    <span class="n">MEDIAN</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Max deviation from median in direction to optimize as basis</span>
+    <span class="c1"># for the extrapolation of missing performance evaluation metrics to complete the inner cross-validation.</span>
+    <span class="n">MAX_DEVIATION_TO_MEDIAN</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Mean deviation from median in direction to optimize as basis</span>
+    <span class="c1"># for the extrapolation of missing performance evaluation metrics to complete the inner cross-validation.</span>
+    <span class="n">MEAN_DEVIATION_TO_MEDIAN</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c1"># optimal value for the performance evaluation metric as basis</span>
+    <span class="c1"># for the extrapolation of missing performance evaluation metrics to complete the inner cross-validation.</span>
+    <span class="n">OPTIMAL_METRIC</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<span class="c1"># for maximizing pass the negative values:  validation_metric_history * (-1)</span>
+<span class="k">def</span> <span class="nf">_extrapolate_metric</span><span class="p">(</span><span class="n">validation_metric_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">method</span><span class="p">:</span> <span class="n">Method</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Extrapolate metric for missing values of a completed inner cross-validation loop.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        validation_metric_history: list of all previously calculated performance evaluation metrics</span>
+<span class="sd">        method: The extrapolation method to be used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Extrapolated performance evaluation metric based on all previously calculated performance evaluation metrics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">median_validation_metric</span> <span class="o">=</span> <span class="n">median</span><span class="p">(</span><span class="n">validation_metric_history</span><span class="p">)</span>
+
+    <span class="c1"># get deviations from median in direction to optimize</span>
+    <span class="n">deviation_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">median_validation_metric</span> <span class="o">-</span> <span class="n">metric</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">validation_metric_history</span> <span class="k">if</span> <span class="n">metric</span> <span class="o">&lt;</span> <span class="n">median_validation_metric</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">deviation_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">MEAN_DEVIATION_TO_MEDIAN</span><span class="p">:</span>
+            <span class="c1"># mean deviation in direction to optimize from median</span>
+            <span class="k">return</span> <span class="n">median_validation_metric</span> <span class="o">-</span> <span class="n">mean</span><span class="p">(</span><span class="n">deviation_list</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">MAX_DEVIATION_TO_MEDIAN</span><span class="p">:</span>
+            <span class="c1"># mean deviation in direction to optimize from median</span>
+            <span class="k">return</span> <span class="n">median_validation_metric</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">deviation_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;method&#39; must be of type &#39;Method&#39; but was: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">median_validation_metric</span>
+
+
+<div class="viewcode-block" id="should_prune_against_threshold"><a class="viewcode-back" href="../../code-doc.html#cv_pruner.should_prune_against_threshold">[docs]</a><span class="k">def</span> <span class="nf">should_prune_against_threshold</span><span class="p">(</span>
+    <span class="n">current_step_of_complete_nested_cross_validation</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">folds_outer_cv</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">folds_inner_cv</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">validation_metric_history</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">threshold_for_pruning</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">direction_to_optimize_is_minimize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">optimal_metric</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMAL_METRIC</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pruner to detect invalid metrics of the trials.</span>
+
+<span class="sd">    Prune if a metric exceeds upper threshold,</span>
+<span class="sd">    falls behind lower threshold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        current_step_of_complete_nested_cross_validation: one based step of complete nested cross-validation.</span>
+<span class="sd">        folds_outer_cv: absolute number of folds for the outer cross validation loop (one based):</span>
+<span class="sd">                        set zero for standard cross-validation.</span>
+<span class="sd">        folds_inner_cv: absolute number of folds for the inner cross validation loop (one based).</span>
+<span class="sd">        validation_metric_history: list of all previously calculated performance evaluation metrics.</span>
+<span class="sd">        threshold_for_pruning: threshold which must not be exceeded (minimizing) or fallen below (maximizing).</span>
+<span class="sd">        direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.</span>
+<span class="sd">        optimal_metric: optimal value for the performance evaluation metric.</span>
+<span class="sd">        method: The extrapolation method to be used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        If the trial should be pruned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_step_inner_cv</span> <span class="o">=</span> <span class="n">current_step_of_complete_nested_cross_validation</span> <span class="o">%</span> <span class="n">folds_inner_cv</span>
+
+    <span class="c1"># as 0 is not defined as valid step number, step number is reset to number of inner folds</span>
+    <span class="k">if</span> <span class="n">current_step_inner_cv</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">current_step_inner_cv</span> <span class="o">=</span> <span class="n">folds_inner_cv</span>
+    <span class="n">prune</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">first_third_of_complete_nested_cross_validation</span> <span class="o">=</span> <span class="n">folds_outer_cv</span> <span class="o">/</span> <span class="mi">3</span>
+
+    <span class="c1"># in case of standard cross-validation only one &quot;inner-loop&quot; is calculated</span>
+    <span class="k">if</span> <span class="n">folds_outer_cv</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">first_third_of_complete_nested_cross_validation</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+    <span class="c1"># starts calculating after half of the inner k-fold cross-validation of the</span>
+    <span class="c1"># nested cross-validation and a minimum of four steps</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">current_step_of_complete_nested_cross_validation</span>
+        <span class="o">&gt;=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">folds_inner_cv</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="o">&lt;</span> <span class="n">first_third_of_complete_nested_cross_validation</span>
+        <span class="ow">and</span> <span class="n">current_step_of_complete_nested_cross_validation</span> <span class="o">&gt;</span> <span class="mi">3</span>
+    <span class="p">):</span>
+        <span class="c1"># change sign to adapt the calculations to maximize as direction to optimize</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">direction_to_optimize_is_minimize</span><span class="p">:</span>
+            <span class="n">validation_metric_history</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">validation_metric_history</span><span class="p">]</span>
+            <span class="n">threshold_for_pruning</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">MEDIAN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">median</span><span class="p">(</span><span class="n">validation_metric_history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">threshold_for_pruning</span>
+
+        <span class="c1"># extrapolate metric for the rest of the inner cross validation loop</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMAL_METRIC</span><span class="p">:</span>
+            <span class="n">extrapolated_metric</span> <span class="o">=</span> <span class="n">optimal_metric</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extrapolated_metric</span> <span class="o">=</span> <span class="n">_extrapolate_metric</span><span class="p">(</span><span class="n">validation_metric_history</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+        <span class="c1"># extrapolate metric up to the next complete loop of the inner k-fold cross-validation  # noqa: E501</span>
+        <span class="n">result_already_calculated_steps</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">median</span><span class="p">(</span><span class="n">validation_metric_history</span><span class="p">)</span> <span class="o">*</span> <span class="n">current_step_of_complete_nested_cross_validation</span>
+        <span class="p">)</span>
+        <span class="n">total_steps_up_to_the_next_completed_inner_cv_loop</span> <span class="o">=</span> <span class="n">current_step_of_complete_nested_cross_validation</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">folds_inner_cv</span> <span class="o">-</span> <span class="n">current_step_inner_cv</span>
+        <span class="p">)</span>
+        <span class="n">extrapolated_result_remaining_steps_of_the_inner_cv_loop</span> <span class="o">=</span> <span class="n">extrapolated_metric</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">folds_inner_cv</span> <span class="o">-</span> <span class="n">current_step_inner_cv</span>
+        <span class="p">)</span>
+        <span class="n">extrapolated_result_for_next_complete_inner_cv_loop</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">result_already_calculated_steps</span> <span class="o">+</span> <span class="n">extrapolated_result_remaining_steps_of_the_inner_cv_loop</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="n">total_steps_up_to_the_next_completed_inner_cv_loop</span>
+
+        <span class="c1"># extrapolated results worse than threshold?</span>
+        <span class="n">prune</span> <span class="o">=</span> <span class="n">threshold_for_pruning</span> <span class="o">&lt;</span> <span class="n">extrapolated_result_for_next_complete_inner_cv_loop</span>
+
+    <span class="k">return</span> <span class="n">prune</span></div>
+
+
+<div class="viewcode-block" id="no_features_selected"><a class="viewcode-back" href="../../code-doc.html#cv_pruner.no_features_selected">[docs]</a><span class="k">def</span> <span class="nf">no_features_selected</span><span class="p">(</span><span class="n">feature_importances</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pruner to detect semantically meaningless trials.</span>
+
+<span class="sd">    Prune if a trial includes a training result without any selected features.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        feature_importances: weights or importances for each feature after training</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        If a trial should be pruned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feature_importances</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">feature_importances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">feature_importances</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">feature_importances</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Sigrun May.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
