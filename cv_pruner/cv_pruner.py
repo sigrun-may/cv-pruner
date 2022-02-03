@@ -15,8 +15,20 @@ import numpy as np
 
 
 class Method(Enum):
-    """The extrapolation method."""
+    """Extrapolation method for the threshold-based pruner.
 
+    Options:
+    MEDIAN = No extrapolation. Pruning against the current median.
+    MAX_DEVIATION_TO_MEDIAN = Maximum deviation from the median in the
+    optimization direction to optimize as a basis for extrapolation of missing
+    performance evaluation metrics of the complete inner cross-validation.
+    MEAN_DEVIATION_TO_MEDIAN = Mean deviation from the median in the
+    optimization direction to optimize as a basis for extrapolating missing
+    performance evaluation metrics of the complete inner cross-validation.
+    OPTIMAL_METRIC = Optimal value for the performance evaluation metric as
+    basis for extrapolation of missing performance evaluation metrics of the
+    complete inner cross-validation.
+    """
     # No extrapolation. Prune against the current median.
     MEDIAN = 0
 
@@ -76,21 +88,24 @@ def should_prune_against_threshold(
     optimal_metric: float,
     method: Method = Method.OPTIMAL_METRIC,
 ) -> bool:
-    """Pruner to detect invalid metrics of the trials.
+    """Pruner to detect an invalid performance evaluation value of a trial.
 
-    Prune if a metric exceeds upper threshold,
-    falls behind lower threshold.
+    Prune if a metric exceeds the upper threshold or falls behind the lower
+    threshold.
 
     Args:
-        current_step_of_complete_nested_cross_validation: one based step of complete nested cross-validation.
-        folds_outer_cv: absolute number of folds for the outer cross validation loop (one based):
-                        set zero for standard cross-validation.
-        folds_inner_cv: absolute number of folds for the inner cross validation loop (one based).
-        validation_metric_history: list of all previously calculated performance evaluation metrics.
-        threshold_for_pruning: threshold which must not be exceeded (minimizing) or fallen below (maximizing).
+        current_step_of_complete_nested_cross_validation: One based step of the
+        complete nested cross-validation.
+        folds_outer_cv: Absolute number of folds for the outer cross-validation loop (one
+        based): Set to zero for standard cross-validation.
+        folds_inner_cv: Absolute number of folds for the inner cross
+        validation loop (one based).
+        validation_metric_history: List of all previously calculated performance evaluation metric values.
+        threshold_for_pruning: Threshold that should not be exceeded (
+        minimizing) or fallen below (maximizing).
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
-        optimal_metric: optimal value for the performance evaluation metric.
-        method: The extrapolation method to be used.
+        optimal_metric: Optimal value for the performance evaluation metric.
+        method: The extrapolation method to be used (see Method).
 
     Returns:
         If the trial should be pruned.
