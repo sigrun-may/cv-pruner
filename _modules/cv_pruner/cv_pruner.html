@@ -162,25 +162,24 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Pruner to detect an invalid performance evaluation value of a trial.</span>
 
-<span class="sd">    Prune if a metric exceeds the upper threshold or falls behind the lower</span>
-<span class="sd">    threshold.</span>
-
 <span class="sd">    Args:</span>
 <span class="sd">        current_step_of_complete_nested_cross_validation: One based step of the</span>
-<span class="sd">        complete nested cross-validation.</span>
+<span class="sd">            complete nested cross-validation.</span>
 <span class="sd">        folds_outer_cv: Absolute number of folds for the outer cross-validation loop (one</span>
-<span class="sd">        based): Set to zero for standard cross-validation.</span>
+<span class="sd">            based): Set to zero for standard cross-validation.</span>
 <span class="sd">        folds_inner_cv: Absolute number of folds for the inner cross</span>
-<span class="sd">        validation loop (one based).</span>
+<span class="sd">            validation loop (one based).</span>
 <span class="sd">        validation_metric_history: List of all previously calculated performance evaluation metric values.</span>
 <span class="sd">        threshold_for_pruning: Threshold that should not be exceeded (</span>
-<span class="sd">        minimizing) or fallen below (maximizing).</span>
+<span class="sd">            minimizing) or fallen below (maximizing).</span>
 <span class="sd">        direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.</span>
 <span class="sd">        optimal_metric: Optimal value for the performance evaluation metric.</span>
 <span class="sd">        method: The extrapolation method to be used (see Method).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        If the trial should be pruned.</span>
+<span class="sd">        If the trial should be pruned. TRUE if it is likely that the final</span>
+<span class="sd">        performance evaluation metric will exceed the upper threshold or fall below the lower threshold.</span>
+<span class="sd">        FALSE otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">current_step_inner_cv</span> <span class="o">=</span> <span class="n">current_step_of_complete_nested_cross_validation</span> <span class="o">%</span> <span class="n">folds_inner_cv</span>
 
