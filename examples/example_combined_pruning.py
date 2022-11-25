@@ -9,14 +9,13 @@ import math
 
 import lightgbm as lgb
 import optuna
-from data_loader import load_colon_data
 from optuna import TrialPruned
 from optuna.pruners import SuccessiveHalvingPruner
 from scipy.stats import trim_mean
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 
 from cv_pruner import Method, cv_pruner
-
+from data_loader.data_loader import load_colon_data
 
 # Parse the data
 label, data = load_colon_data()
@@ -55,10 +54,10 @@ def _optuna_objective(trial):
             # parameters for model training to combat overfitting
             parameters = dict(
                 min_data_in_leaf=trial.suggest_int("min_data_in_leaf", 2, math.floor(data.shape[0] / 2)),
-                lambda_l1=trial.suggest_uniform("lambda_l1", 0.0, 3),
-                min_gain_to_split=trial.suggest_uniform("min_gain_to_split", 0, 5),
+                lambda_l1=trial.suggest_float("lambda_l1", 0.0, 3),
+                min_gain_to_split=trial.suggest_float("min_gain_to_split", 0, 5),
                 max_depth=trial.suggest_int("max_depth", 2, 20),
-                bagging_fraction=trial.suggest_uniform("bagging_fraction", 0.1, 1.0),
+                bagging_fraction=trial.suggest_float("bagging_fraction", 0.1, 1.0),
                 bagging_freq=trial.suggest_int("bagging_freq", 1, 10),
                 extra_trees=True,
                 objective="binary",
@@ -74,11 +73,12 @@ def _optuna_objective(trial):
             else:
                 parameters["num_leaves"] = trial.suggest_int("num_leaves", 2, 90)
 
+            eval_result = {}
             model = lgb.train(
                 parameters,
                 train_data,
                 valid_sets=[validation_data],
-                verbose_eval=False,
+                callbacks=[lgb.record_evaluation(eval_result)],
             )
             validation_metric_history.append(model.best_score["valid_0"]["binary_logloss"])
 
@@ -87,14 +87,14 @@ def _optuna_objective(trial):
                 raise TrialPruned()
 
             if cv_pruner.should_prune_against_threshold(
-                current_step_of_complete_nested_cross_validation,
-                folds_outer_cv=data.shape[0],  # leave one out cross-validation
-                folds_inner_cv=inner_folds,
-                validation_metric_history=validation_metric_history,
-                threshold_for_pruning=0.45,
-                direction_to_optimize_is_minimize=True,
-                optimal_metric=0,  # optimal metric for logloss
-                method=Method.OPTIMAL_METRIC,
+                    folds_inner_cv=inner_folds,
+                    validation_metric_history=validation_metric_history,
+                    threshold_for_pruning=0.45,
+                    start_step=4,
+                    stop_step=int(data.shape[0] / 3),
+                    direction_to_optimize_is_minimize=True,
+                    method=Method.MAX_DEVIATION_TO_MEDIAN,
+                    # optimal_metric=0,  # optimal metric for logloss
             ):
                 # Report intermediate results before stopping the trial
                 trial.report(trim_mean(validation_metric_history, proportiontocut=0.2), outer_fold_index)
@@ -128,7 +128,10 @@ study = optuna.create_study(
 study.optimize(
     _optuna_objective,
     n_trials=40,  # number of trials to calculate
+    n_jobs=4,
 )
 
-fig = optuna.visualization.plot_intermediate_values(study)
-fig.show()
+# import joblib
+# joblib.dump("result.pkl.gz", study)
+# fig = optuna.visualization.plot_intermediate_values(study)
+# fig.show()
