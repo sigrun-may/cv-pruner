@@ -5,7 +5,7 @@
 
 """Tests for data loaders."""
 
-from examples.data_loader import load_colon_data, load_leukemia_data, load_prostate_data
+from data_loader.data_loader import load_colon_data, load_leukemia_data, load_prostate_data
 
 
 def test_load_colon_data():
