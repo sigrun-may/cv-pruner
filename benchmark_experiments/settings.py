@@ -9,7 +9,7 @@
 
 """TODO: add docstring."""
 
-n_trials = 5
+n_trials = 40
 
 # set direction to optimize
 direction_to_optimize_is_minimize = True
@@ -18,7 +18,7 @@ if direction_to_optimize_is_minimize:
 else:
     direction_to_optimize = "maximize"
 
-n_jobs_optuna = 4  # number of parallel processes for optuna
+n_jobs_optuna = 6  # number of parallel processes for optuna
 if n_jobs_optuna > 1:
     show_progress = False
 else:
