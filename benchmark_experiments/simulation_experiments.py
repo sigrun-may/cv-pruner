@@ -21,7 +21,7 @@ def colon_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(0, 1):
+    for i in range(30):
         start = time()
         study_name = "colon_cv_pruner" + str(i)
         print(
@@ -40,7 +40,7 @@ def prostate_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(0, 1):
+    for i in range(30):
         start = time()
         study_name = "prostate_cv_pruner" + str(i)
         print(
@@ -59,7 +59,7 @@ def leukemia_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(0, 1):
+    for i in range(30):
         start = time()
         study_name = "leukemia_cv_pruner" + str(i)
         print(
