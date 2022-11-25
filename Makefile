@@ -1,6 +1,6 @@
 src := cv_pruner
 test-src := tests
-other-src := examples
+other-src := examples benchmark_experiments data_loader
 
 # check the code
 check:
