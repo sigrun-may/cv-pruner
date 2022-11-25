@@ -25,7 +25,7 @@ def load_colon_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    cache_data_file = "./colon_data.pkl.gz"
+    cache_data_file = "./data/colon_data.pkl.gz"
     try:
         data_df, label = joblib.load(cache_data_file)
     except:
@@ -83,7 +83,7 @@ def load_prostate_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    cache_data_file = "./prostate_data.pkl.gz"
+    cache_data_file = "./data/prostate_data.pkl.gz"
     try:
         data, labels = joblib.load(cache_data_file)
     except:
@@ -118,7 +118,7 @@ def load_leukemia_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    cache_data_file = "./leukemia_data.pkl.gz"
+    cache_data_file = "./data/leukemia_data.pkl.gz"
     try:
         data, labels = joblib.load(cache_data_file)
     except:
