@@ -7,7 +7,7 @@
 
 """Data loader module."""
 
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def load_colon_data() -> Tuple[pd.Series, pd.DataFrame]:
+def load_colon_data() -> Tuple[pd.DataFrame, pd.Series]:
     """Load colon data.
 
     The data is loaded and parsed from the internet.
@@ -64,13 +64,13 @@ def load_colon_data() -> Tuple[pd.Series, pd.DataFrame]:
 
     data_df.columns = column_names
 
-    return pd.Series(label), data_df
+    return data_df, pd.Series(label)
 
 
 # TODO append random features and shuffle
 
 
-def load_prostate_data() -> Tuple[pd.Series, pd.DataFrame]:
+def load_prostate_data() -> Tuple[pd.DataFrame, pd.Series]:
     """Load prostate data.
 
     The data is loaded and parsed from <https://web.stanford.edu/~hastie/CASI_files/DATA/prostate.html>
@@ -94,10 +94,10 @@ def load_prostate_data() -> Tuple[pd.Series, pd.DataFrame]:
     assert len(labels) == 102
     assert data.shape == (102, 6033)
 
-    return pd.Series(labels), data
+    return data, pd.Series(labels)
 
 
-def load_leukemia_data() -> Tuple[pd.Series, pd.DataFrame]:
+def load_leukemia_data() -> Tuple[pd.DataFrame, pd.Series]:
     """Load leukemia data.
 
     The data is loaded and parsed from the internet.
@@ -122,4 +122,35 @@ def load_leukemia_data() -> Tuple[pd.Series, pd.DataFrame]:
     assert len(labels) == 72
     assert data.shape == (72, 7128)
 
-    return pd.Series(labels), data
+    return data, pd.Series(labels)
+
+
+def standardize_sample_size(data, label) -> Tuple[pd.DataFrame, pd.Series]:
+    """Reduce samples to 15 for each class.
+
+    Returns:
+        Tuple containing balanced data and corresponding labels.
+    """
+    # reduce samples to 15 for each class
+    indices: List[int] = []
+    for i in range(label.shape[0]):
+        if label.iloc[i] == 0:
+            indices.append(i)
+        if len(indices) == 15:
+            break
+
+    for i in range(label.shape[0]):
+        if label.iloc[i] == 1:
+            indices.append(i)
+        if len(indices) == 30:
+            break
+
+    data = data.iloc[indices]
+    label = label.iloc[indices]
+    assert data.shape[0] == 30
+    assert len(label) == 30
+
+    print(data.shape)
+    print(label.shape)
+
+    return data, label
