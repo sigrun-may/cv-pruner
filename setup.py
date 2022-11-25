@@ -9,7 +9,6 @@ import os
 
 import setuptools
 
-
 project_name = "cv_pruner"
 source_code = "https://github.com/sigrun-may/cv-pruner"
 keywords = "ml ai machine-learning hyperparameter-optimization high-dimensional data"
@@ -29,6 +28,12 @@ extras_require = {
     "testing": ["pytest"],
     "doc": ["sphinx", "sphinx_rtd_theme", "myst_parser", "sphinx_copybutton"],
 }
+
+# add "all"
+all_extra_packages = list(
+    {package_name for value in extras_require.values() for package_name in value}
+)
+extras_require["all"] = all_extra_packages
 
 
 def get_version():
