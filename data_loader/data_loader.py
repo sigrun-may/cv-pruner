@@ -173,8 +173,3 @@ def standardize_sample_size(data, label) -> Tuple[pd.DataFrame, pd.Series]:
     print(label.shape)
 
     return data, label
-
-
-load_colon_data()
-load_leukemia_data()
-load_prostate_data()
