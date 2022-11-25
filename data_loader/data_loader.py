@@ -9,6 +9,7 @@
 
 from typing import List, Tuple
 
+import joblib
 import numpy as np
 import pandas as pd
 import requests
@@ -24,50 +25,54 @@ def load_colon_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    html_data = "http://genomics-pubs.princeton.edu/oncology/affydata/I2000.html"
+    cache_data_file = "./colon_data.pkl.gz"
+    try:
+        data_df, label = joblib.load(cache_data_file)
+    except:
+        html_data = "http://genomics-pubs.princeton.edu/oncology/affydata/I2000.html"
 
-    page = requests.get(html_data)
+        page = requests.get(html_data)
 
-    soup = BeautifulSoup(page.content, "html.parser")
-    colon_text_data = soup.get_text()
+        soup = BeautifulSoup(page.content, "html.parser")
+        colon_text_data = soup.get_text()
 
-    colon_text_data_lines = colon_text_data.splitlines()
-    colon_text_data_lines = [[float(s) for s in line.split()] for line in colon_text_data_lines if len(line) > 20]
-    assert len(colon_text_data_lines) == 2000
-    assert len(colon_text_data_lines[0]) == 62
+        colon_text_data_lines = colon_text_data.splitlines()
+        colon_text_data_lines = [[float(s) for s in line.split()] for line in colon_text_data_lines if len(line) > 20]
+        assert len(colon_text_data_lines) == 2000
+        assert len(colon_text_data_lines[0]) == 62
 
-    data = np.array(colon_text_data_lines).T
+        data = np.array(colon_text_data_lines).T
 
-    html_label = "http://genomics-pubs.princeton.edu/oncology/affydata/tissues.html"
-    page = requests.get(html_label)
-    soup = BeautifulSoup(page.content, "html.parser")
-    colon_text_label = soup.get_text()
-    colon_text_label = colon_text_label.splitlines()
+        html_label = "http://genomics-pubs.princeton.edu/oncology/affydata/tissues.html"
+        page = requests.get(html_label)
+        soup = BeautifulSoup(page.content, "html.parser")
+        colon_text_label = soup.get_text()
+        colon_text_label = colon_text_label.splitlines()
 
-    label = []
+        label = []
 
-    for line in colon_text_label:
-        try:
-            i = int(line)
-            label.append(0 if i > 0 else 1)
-        except:  # noqa: E722
-            pass
+        for line in colon_text_label:
+            try:
+                i = int(line)
+                label.append(0 if i > 0 else 1)
+            except:  # noqa: E722
+                pass
 
-    assert len(label) == 62
+        assert len(label) == 62
 
-    data_df = pd.DataFrame(data)
+        data_df = pd.DataFrame(data)
 
-    # generate feature names
-    column_names = []
-    for column_name in data_df.columns:
-        column_names.append("gene_" + str(column_name))
+        # generate feature names
+        column_names = []
+        for column_name in data_df.columns:
+            column_names.append("gene_" + str(column_name))
 
-    data_df.columns = column_names
+        data_df.columns = column_names
+
+        # cache data
+        joblib.dump((data_df, label), cache_data_file, compress=("gzip", 3))
 
     return data_df, pd.Series(label)
-
-
-# TODO append random features and shuffle
 
 
 def load_prostate_data() -> Tuple[pd.DataFrame, pd.Series]:
@@ -78,21 +83,28 @@ def load_prostate_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    df = pd.read_csv("https://web.stanford.edu/~hastie/CASI_files/DATA/prostmat.csv")
-    data = df.T
+    cache_data_file = "./prostate_data.pkl.gz"
+    try:
+        data, labels = joblib.load(cache_data_file)
+    except:
+        df = pd.read_csv("https://web.stanford.edu/~hastie/CASI_files/DATA/prostmat.csv")
+        data = df.T
 
-    # labels
-    labels = []
-    for label in df.columns:  # pylint:disable=no-member
-        if "control" in label:
-            labels.append(0)
-        elif "cancer" in label:
-            labels.append(1)
-        else:
-            assert False, "This must not happen!"
+        # labels
+        labels = []
+        for label in df.columns:  # pylint:disable=no-member
+            if "control" in label:
+                labels.append(0)
+            elif "cancer" in label:
+                labels.append(1)
+            else:
+                assert False, "This must not happen!"
 
-    assert len(labels) == 102
-    assert data.shape == (102, 6033)
+        assert len(labels) == 102
+        assert data.shape == (102, 6033)
+
+        # cache data
+        joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
 
     return data, pd.Series(labels)
 
@@ -106,21 +118,28 @@ def load_leukemia_data() -> Tuple[pd.DataFrame, pd.Series]:
     Returns:
         Tuple containing labels and data.
     """
-    df = pd.read_csv("https://web.stanford.edu/~hastie/CASI_files/DATA/leukemia_big.csv")
-    data = df.T
+    cache_data_file = "./leukemia_data.pkl.gz"
+    try:
+        data, labels = joblib.load(cache_data_file)
+    except:
+        df = pd.read_csv("https://web.stanford.edu/~hastie/CASI_files/DATA/leukemia_big.csv")
+        data = df.T
 
-    # labels
-    labels = []
-    for label in df.columns:  # pylint:disable=no-member
-        if "ALL" in label:
-            labels.append(0)
-        elif "AML" in label:
-            labels.append(1)
-        else:
-            assert False, "This must not happen!"
+        # labels
+        labels = []
+        for label in df.columns:  # pylint:disable=no-member
+            if "ALL" in label:
+                labels.append(0)
+            elif "AML" in label:
+                labels.append(1)
+            else:
+                assert False, "This must not happen!"
 
-    assert len(labels) == 72
-    assert data.shape == (72, 7128)
+        assert len(labels) == 72
+        assert data.shape == (72, 7128)
+
+        # cache data
+        joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
 
     return data, pd.Series(labels)
 
@@ -154,3 +173,8 @@ def standardize_sample_size(data, label) -> Tuple[pd.DataFrame, pd.Series]:
     print(label.shape)
 
     return data, label
+
+
+load_colon_data()
+load_leukemia_data()
+load_prostate_data()
