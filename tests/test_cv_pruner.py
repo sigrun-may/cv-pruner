@@ -21,14 +21,14 @@ def test_check_against_threshold_false():
     ]
 
     result = should_prune_against_threshold(
-        current_step_of_complete_nested_cross_validation=8,
-        folds_outer_cv=13,
         folds_inner_cv=8,
         validation_metric_history=validation_metric_history,
         threshold_for_pruning=0.65,
+        start_step=4,
+        stop_step=30,
         direction_to_optimize_is_minimize=True,
-        optimal_metric=0,
         method=Method.OPTIMAL_METRIC,
+        optimal_metric=0,
     )
 
     assert not result
@@ -48,14 +48,14 @@ def test_check_against_threshold_true():
     ]
 
     result = should_prune_against_threshold(
-        current_step_of_complete_nested_cross_validation=8,
-        folds_outer_cv=13,
         folds_inner_cv=8,
         validation_metric_history=validation_metric_history,
         threshold_for_pruning=0.65,
+        start_step=4,
+        stop_step=30,
         direction_to_optimize_is_minimize=True,
-        optimal_metric=0,
         method=Method.OPTIMAL_METRIC,
+        optimal_metric=0,
     )
 
     assert result
@@ -74,14 +74,14 @@ def test_standard_cross_validation_true():
     ]
 
     result = should_prune_against_threshold(
-        current_step_of_complete_nested_cross_validation=8,
-        folds_outer_cv=0,
         folds_inner_cv=8,
         validation_metric_history=validation_metric_history,
         threshold_for_pruning=0.65,
+        start_step=4,
+        stop_step=30,
         direction_to_optimize_is_minimize=True,
-        optimal_metric=0,
         method=Method.OPTIMAL_METRIC,
+        optimal_metric=0,
     )
 
     assert result
