@@ -2,8 +2,9 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from typing import List
+from typing import List, Union
 
+import numpy as np
 import optuna
 from optuna.pruners import BasePruner
 
@@ -32,3 +33,20 @@ class MultiPrunerDelegate(BasePruner):
             else:
                 pruner_results.append(pruner_result)
         return any(pruner_results)
+
+
+class NoFeatureSelectedPruner(BasePruner):
+    def __init__(self):
+        self.feature_values = None
+
+    def communicate_feature_values(self, feature_values: Union[np.ndarray, List[float]]):
+        self.feature_values = feature_values
+
+    def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
+        if self.feature_values is None:
+            raise RuntimeError("'feature_values' is not set! Did you forget to call 'communicate_feature_values'?")
+
+        if isinstance(self.feature_values, list):
+            self.feature_values = np.array(self.feature_values)
+
+        return np.sum(self.feature_values != 0) == 0

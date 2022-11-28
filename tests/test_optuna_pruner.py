@@ -4,7 +4,10 @@
 
 from unittest.mock import MagicMock
 
-from cv_pruner.optuna_pruner import MultiPrunerDelegate
+import numpy as np
+import pytest
+
+from cv_pruner.optuna_pruner import MultiPrunerDelegate, NoFeatureSelectedPruner
 
 
 def test_MultiPrunerDelegate_prune_false():
@@ -19,7 +22,7 @@ def test_MultiPrunerDelegate_prune_false():
     mpd = MultiPrunerDelegate(pruner_list=pruner_list)
 
     prune_result = mpd.prune(None, None)
-    assert prune_result is False
+    assert not prune_result
     pruner_1.prune.assert_called_once()
     pruner_2.prune.assert_called_once()
 
@@ -73,3 +76,45 @@ def test_MultiPrunerDelegate_prune_true_not_eager():
     assert prune_result
     pruner_1.prune.assert_called_once()
     pruner_2.prune.assert_called_once()
+
+
+def test_NoFeatureSelectedPruner_all_zero_list():
+    feature_values = [0.0, 0.0]
+    nfsp = NoFeatureSelectedPruner()
+    nfsp.communicate_feature_values(feature_values)
+
+    prune_result = nfsp.prune(None, None)
+    assert prune_result
+
+
+def test_NoFeatureSelectedPruner_all_zero_np():
+    feature_values = np.array([0.0, 0.0])
+    nfsp = NoFeatureSelectedPruner()
+    nfsp.communicate_feature_values(feature_values)
+
+    prune_result = nfsp.prune(None, None)
+    assert prune_result
+
+
+def test_NoFeatureSelectedPruner_not_all_zero_list():
+    feature_values = [0.0, 0.1]
+    nfsp = NoFeatureSelectedPruner()
+    nfsp.communicate_feature_values(feature_values)
+
+    prune_result = nfsp.prune(None, None)
+    assert not prune_result
+
+
+def test_NoFeatureSelectedPruner_not_all_zero_np():
+    feature_values = np.array([0.0, 0.1])
+    nfsp = NoFeatureSelectedPruner()
+    nfsp.communicate_feature_values(feature_values)
+
+    prune_result = nfsp.prune(None, None)
+    assert not prune_result
+
+
+def test_NoFeatureSelectedPruner_feature_values_not_set():
+    nfsp = NoFeatureSelectedPruner()
+    with pytest.raises(RuntimeError):
+        nfsp.prune(None, None)
