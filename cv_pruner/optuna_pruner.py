@@ -64,7 +64,7 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
         prune_result = self.pruner.prune(study, trial)
         if prune_result and not self.prune_reported:
-            pruning_timestamp = datetime.datetime.now()  # TODO: check if this is right!
+            pruning_timestamp = datetime.datetime.now().isoformat(timespec="microseconds")  # like Optuna
             intermediate_values = trial.intermediate_values.values()
             step = len(intermediate_values)
             trial.set_user_attr(f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
