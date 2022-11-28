@@ -2,12 +2,12 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
 
-from cv_pruner.optuna_pruner import MultiPrunerDelegate, NoFeatureSelectedPruner
+from cv_pruner.optuna_pruner import MultiPrunerDelegate, NoFeatureSelectedPruner, BenchmarkPruneFunctionWrapper
 
 
 def test_MultiPrunerDelegate_prune_false():
@@ -118,3 +118,30 @@ def test_NoFeatureSelectedPruner_feature_values_not_set():
     nfsp = NoFeatureSelectedPruner()
     with pytest.raises(RuntimeError):
         nfsp.prune(None, None)
+
+
+@patch("cv_pruner.optuna_pruner.datetime")
+def test_BenchmarkPruneFunctionWrapper(datetime):
+    fake_timestamp = "fake_timestamp"
+    datetime.datetime.now.return_value = fake_timestamp
+
+    mock_pruner = MagicMock()
+    mock_pruner.prune.side_effect = [False, True, True]
+    mock_pruner_name = "FakeMockPruner"
+    bpfw = BenchmarkPruneFunctionWrapper(mock_pruner, pruner_name=mock_pruner_name)
+
+    mock_trial = MagicMock()
+    mock_trial.intermediate_values.values.return_value = [0.1, 0.2]
+
+    first_prune_result = bpfw.prune(None, mock_trial)
+    assert not first_prune_result
+
+    second_prune_result = bpfw.prune(None, mock_trial)
+    assert second_prune_result
+    mock_trial.set_user_attr.assert_called_with(f"{mock_pruner_name}_pruned_at",
+                                                {"step": 2, "timestamp": fake_timestamp})
+    mock_trial.set_user_attr.called_once()
+
+    third_prune_result = bpfw.prune(None, mock_trial)
+    assert third_prune_result
+    mock_trial.set_user_attr.called_once()  # not 2 times!!!

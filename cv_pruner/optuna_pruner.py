@@ -2,7 +2,8 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from typing import List, Union
+import datetime
+from typing import List, Optional, Union
 
 import numpy as np
 import optuna
@@ -50,3 +51,23 @@ class NoFeatureSelectedPruner(BasePruner):
             self.feature_values = np.array(self.feature_values)
 
         return np.sum(self.feature_values != 0) == 0
+
+
+class BenchmarkPruneFunctionWrapper(BasePruner):
+    def __init__(self, pruner: BasePruner, pruner_name: Optional[str] = None):
+        self.pruner = pruner
+        self.prune_reported = False
+        if pruner_name is None:
+            pruner_name = self.pruner.__class__.__name__
+        self.pruner_name = pruner_name
+
+    def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
+        prune_result = self.pruner.prune(study, trial)
+        if prune_result and not self.prune_reported:
+            pruning_timestamp = datetime.datetime.now()  # TODO: check if this is right!
+            intermediate_values = trial.intermediate_values.values()
+            step = len(intermediate_values)
+            trial.set_user_attr(f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
+            self.prune_reported = True
+
+        return prune_result
