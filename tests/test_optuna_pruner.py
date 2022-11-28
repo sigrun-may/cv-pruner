@@ -1,3 +1,7 @@
+# Copyright (c) 2022 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften
+# This software is distributed under the terms of the MIT license
+# which is available at https://opensource.org/licenses/MIT
+
 from unittest.mock import MagicMock
 
 from cv_pruner.optuna_pruner import MultiPrunerDelegate
