@@ -123,7 +123,7 @@ def test_NoFeatureSelectedPruner_feature_values_not_set():
 @patch("cv_pruner.optuna_pruner.datetime")
 def test_BenchmarkPruneFunctionWrapper(datetime):
     fake_timestamp = "fake_timestamp"
-    datetime.datetime.now.return_value = fake_timestamp
+    datetime.datetime.now.return_value.isoformat.return_value = fake_timestamp
 
     mock_pruner = MagicMock()
     mock_pruner.prune.side_effect = [False, True, True]

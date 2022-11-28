@@ -3,11 +3,14 @@
 # which is available at https://opensource.org/licenses/MIT
 
 import datetime
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import optuna
 from optuna.pruners import BasePruner
+from optuna.study import StudyDirection
+
+from cv_pruner import should_prune_against_threshold, Method
 
 
 class MultiPrunerDelegate(BasePruner):
@@ -71,3 +74,79 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
             self.prune_reported = True
 
         return prune_result
+
+
+class CrossValidationThresholdPruner(BasePruner):
+    """Pruner to detect trials with insufficient performance.
+
+    Prune if a metric exceeds upper threshold,
+    falls behind lower threshold or reaches ``nan``.
+
+    Args:
+        threshold:
+            A minimum value which determines whether pruner prunes or not.
+            If an extrapolated value is smaller than lower, it prunes.
+            Or a maximum value which determines whether pruner prunes or not.
+            If an extrapolated value is larger than upper, it prunes.
+        n_warmup_steps:
+            Pruning is disabled if the step is less than the given number of warmup steps.
+        active_until_step:
+            # TODO
+        cross_validation_folds:
+            Cross-validation folds or folds of inner cross-validation in case of nested cross-validation.
+            If no value has been reported at the time of a pruning check, that particular check
+            will be postponed until a value is reported. Value must be at least 1.
+
+    """
+
+    def __init__(
+            self,
+            threshold: float,
+            n_warmup_steps: int = 0,
+            active_until_step: int = 100,
+            cross_validation_folds: int = 1,
+    ) -> None:
+
+        threshold = _check_value(threshold)
+
+        if n_warmup_steps < 0:
+            raise ValueError("Number of warmup steps cannot be negative but got {}.".format(n_warmup_steps))
+        if cross_validation_folds < 1:
+            raise ValueError("Cross-validation folds must be at least 1 but got {}.".format(cross_validation_folds))
+
+        self._threshold = threshold
+        self._n_warmup_steps = n_warmup_steps
+        self._active_until_step = active_until_step
+        self._cross_validation_folds = cross_validation_folds
+
+    def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
+
+        step = trial.last_step  # TODO check
+        if step is None:
+            return False
+
+        n_warmup_steps = self._n_warmup_steps
+        if step < n_warmup_steps:
+            return False
+
+        return should_prune_against_threshold(
+            self._cross_validation_folds,
+            list(trial.intermediate_values.values()),
+            self._threshold,
+            self._n_warmup_steps,
+            self._active_until_step,
+            study.direction == StudyDirection.MINIMIZE,
+            Method.OPTIMAL_METRIC,
+            optimal_metric=0,
+        )
+
+
+def _check_value(value: Any) -> float:
+    try:
+        # For convenience, we allow users to report a value that can be cast to `float`.
+        value = float(value)
+    except (TypeError, ValueError):
+        message = "The `value` argument is of type '{}' but supposed to be a float.".format(type(value).__name__)
+        raise TypeError(message) from None
+
+    return value

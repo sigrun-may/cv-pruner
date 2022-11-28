@@ -84,9 +84,9 @@ def should_prune_against_threshold(
         folds_inner_cv: int,
         validation_metric_history: List[float],
         threshold_for_pruning: float,
-        start_step: int,
-        stop_step: int,
-        direction_to_optimize_is_minimize: bool,
+        start_step: int = 4,
+        stop_step: int = 100,
+        direction_to_optimize_is_minimize: bool = True,
         method: Method = Method.MEAN_DEVIATION_TO_MEDIAN,
         optimal_metric: Optional[float] = None,
 ) -> bool:
