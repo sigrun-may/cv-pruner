@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from cv_pruner.optuna_pruner import MultiPrunerDelegate, NoFeatureSelectedPruner, BenchmarkPruneFunctionWrapper
+from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner
 
 
 def test_MultiPrunerDelegate_prune_false():
@@ -138,8 +138,9 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
 
     second_prune_result = bpfw.prune(None, mock_trial)
     assert second_prune_result
-    mock_trial.set_user_attr.assert_called_with(f"{mock_pruner_name}_pruned_at",
-                                                {"step": 2, "timestamp": fake_timestamp})
+    mock_trial.set_user_attr.assert_called_with(
+        f"{mock_pruner_name}_pruned_at", {"step": 2, "timestamp": fake_timestamp}
+    )
     mock_trial.set_user_attr.called_once()
 
     third_prune_result = bpfw.prune(None, mock_trial)
