@@ -154,7 +154,10 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
     mock_trial.set_user_attr.called_once()  # not 2 times!!!
 
 
-def test_RepeatedTrainingThresholdPruner_no_prune_if_last_step_not_set():
+@patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
+def test_RepeatedTrainingThresholdPruner_no_prune_if_last_step_not_set(should_prune_against_threshold_mock):
+    should_prune_against_threshold_mock.return_value = True
+
     mock_trial = create_autospec(FrozenTrial)
     none_property_mock = PropertyMock(return_value=None)
     type(mock_trial).last_step = none_property_mock
@@ -163,6 +166,7 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_last_step_not_set():
 
     assert not prune_result
     none_property_mock.assert_called_once_with()
+    should_prune_against_threshold_mock.assert_not_called()
 
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
