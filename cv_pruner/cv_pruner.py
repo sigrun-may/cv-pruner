@@ -88,7 +88,7 @@ def should_prune_against_threshold(
         stop_step: int = 100,
         direction_to_optimize_is_minimize: bool = True,
         method: Method = Method.MEAN_DEVIATION_TO_MEDIAN,
-        optimal_metric: Optional[float] = None,
+        optimal_metric_value: Optional[float] = None,
 ) -> bool:
     """Pruner to detect an invalid performance evaluation value of a trial.
 
@@ -103,7 +103,7 @@ def should_prune_against_threshold(
         stop_step: Pruning stops after the specified ``stop_step`` steps. Must be greater than ``start_step``.
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
         method: The extrapolation method to be used (see Method).
-        optimal_metric: Optimal value for the performance evaluation metric.
+        optimal_metric_value: Optimal value for the performance evaluation metric.
             Must be set if extrapolation method is ``Metric.OPTIMAL_METRIC``.
 
     Returns:
@@ -116,7 +116,7 @@ def should_prune_against_threshold(
         raise ValueError("start_step must be greater than 2!")
     if not stop_step > start_step:
         raise ValueError("stop_step must be greater than start_step!")
-    if method == Method.OPTIMAL_METRIC and optimal_metric is None:
+    if method == Method.OPTIMAL_METRIC and optimal_metric_value is None:
         raise ValueError("optimal_metric must be set if extrapolation method is Metric.OPTIMAL_METRIC!")
 
     prune = False
@@ -137,7 +137,7 @@ def should_prune_against_threshold(
 
         # extrapolate metric for the rest of the inner cross validation loop
         elif method == Method.OPTIMAL_METRIC:
-            extrapolated_metric = optimal_metric  # optimistically extrapolated value e
+            extrapolated_metric = optimal_metric_value  # optimistically extrapolated value e
         else:
             extrapolated_metric = _extrapolate_metric(
                 validation_metric_history, method
