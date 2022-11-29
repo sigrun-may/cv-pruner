@@ -76,6 +76,7 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
 
         return prune_result
 
+
 # TODO: should optimal_metric_value be part of the initializer?
 class RepeatedTrainingThresholdPruner(BasePruner):
     """Pruner to detect trials with insufficient performance.
