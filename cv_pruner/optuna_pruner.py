@@ -130,6 +130,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
         intermediate_values = trial.intermediate_values.values()
         reported_step_count = len(intermediate_values)
 
+        # do not prune if reported_step_count is outside n_warmup_steps and active_until_step
         if reported_step_count < self._n_warmup_steps or reported_step_count > self._active_until_step:
             return False
 
