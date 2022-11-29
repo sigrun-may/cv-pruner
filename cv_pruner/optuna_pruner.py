@@ -103,8 +103,8 @@ class RepeatedTrainingThresholdPruner(BasePruner):
     def __init__(
             self,
             threshold: float,
-            n_warmup_steps: int = 0,
-            active_until_step: int = sys.maxint,
+            n_warmup_steps: int = 3,
+            active_until_step: int = sys.maxsize,
             extrapolation_interval: int = 1,
     ) -> None:
 
@@ -144,7 +144,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             validation_metric_history=list(intermediate_values),
             threshold_for_pruning=self._threshold,
             start_step=3,  # set min value here to let the pruner decide before
-            stop_step=sys.maxint,  # set max value here to let the pruner decide before
+            stop_step=sys.maxsize,  # set max value here to let the pruner decide before
             direction_to_optimize_is_minimize=study.direction == StudyDirection.MINIMIZE,
             method=Method.OPTIMAL_METRIC,
             optimal_metric_value=0,

@@ -231,7 +231,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     type(trial_mock).last_step = none_property_mock
     # trial.intermediate_values.values()
     values_mock = Mock()
-    values_mock.values.return_value = range(2)
+    values_mock.values.return_value = range(5)
     trial_mock.intermediate_values = values_mock
 
     # create study_mock
@@ -239,7 +239,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=2, active_until_step=5)
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
     prune_result = rttp.prune(study_mock, trial_mock)
 
     assert prune_result
@@ -260,7 +260,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     type(trial_mock).last_step = none_property_mock
     # trial.intermediate_values.values()
     values_mock = Mock()
-    values_mock.values.return_value = range(5)
+    values_mock.values.return_value = range(10)
     trial_mock.intermediate_values = values_mock
 
     # create study_mock
@@ -268,7 +268,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=2, active_until_step=5)
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
     prune_result = rttp.prune(study_mock, trial_mock)
 
     assert prune_result
