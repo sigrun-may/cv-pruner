@@ -9,7 +9,7 @@
 
 """TODO: add docstring."""
 
-n_trials = 60
+n_trials = 40
 
 # set direction to optimize
 direction_to_optimize_is_minimize = True
@@ -18,7 +18,7 @@ if direction_to_optimize_is_minimize:
 else:
     direction_to_optimize = "maximize"
 
-n_jobs_optuna = 12  # number of parallel processes for optuna
+n_jobs_optuna = 24  # number of parallel processes for optuna
 if n_jobs_optuna > 1:
     show_progress = False
 else:
@@ -30,6 +30,7 @@ else:
 boosting_type = "rf"
 objective = "binary"
 metric = "binary_logloss"
+# metric = "l1"
 device = "cpu"
 num_cores = 1  # number of parallel processes for lightgbm
 
@@ -44,6 +45,8 @@ simulate_standard_pruner = True
 ##########################
 folds_inner_cv = 10
 reduce_variance = True
+# intermediate_value = 'trim_mean'
+intermediate_value = "median"
 
 ##########################
 # define logging level

@@ -21,9 +21,9 @@ def colon_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(30):
+    for i in range(6):
         start = time()
-        study_name = "colon_cv_pruner" + str(i)
+        study_name = "colon_cv_pruner_median" + str(i)
         print(
             "best value for metric, parameters",
             hpo_pruner_simulation.optimize(data, label, study_name),
@@ -40,9 +40,9 @@ def prostate_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(30):
+    for i in range(6):
         start = time()
-        study_name = "prostate_cv_pruner" + str(i)
+        study_name = "prostate_cv_pruner_median" + str(i)
         print(
             "best value for metric, parameters",
             hpo_pruner_simulation.optimize(data, label, study_name),
@@ -59,9 +59,9 @@ def leukemia_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(30):
+    for i in range(6):
         start = time()
-        study_name = "leukemia_cv_pruner" + str(i)
+        study_name = "leukemia_cv_pruner_median" + str(i)
         print(
             "best value for metric, parameters",
             hpo_pruner_simulation.optimize(data, label, study_name),

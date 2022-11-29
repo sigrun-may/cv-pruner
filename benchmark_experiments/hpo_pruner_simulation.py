@@ -156,10 +156,18 @@ def simulate_hpo_pruning(
 
         # only report 20 % trimmed mean values of complete inner folds to smooth high variance in validation results  # noqa: E501
         if settings.reduce_variance:
-            trial.report(
-                trim_mean(evaluation_metric_list, proportiontocut=0.2),
-                outer_sample_index,
-            )
+            if settings.intermediate_value == "trim_mean":
+                trial.report(
+                    trim_mean(evaluation_metric_list, proportiontocut=0.2),
+                    outer_sample_index,
+                )
+            elif settings.intermediate_value == "median":
+                trial.report(
+                    np.median(evaluation_metric_list),
+                    outer_sample_index,
+                )
+            else:
+                raise ValueError("no valid intermediate value method defined")
 
             # built in optuna standard pruner
             if not standard_pruned:  # check if the simulated pruner has already pruned the trial
@@ -189,8 +197,15 @@ def simulate_hpo_pruning(
     trial.set_user_attr("number_of_features_in_model_list", number_of_features_in_model_list)
     trial.set_user_attr("step_duration_list", step_duration_list)
 
-    # return trimmed mean to the optimizer to prevent optimizing based on outliers
-    return trim_mean(evaluation_metric_list, proportiontocut=0.2)
+    # only report 20 % trimmed mean values of complete inner folds to smooth high variance in validation results  # noqa: E501
+    if settings.reduce_variance:
+        if settings.intermediate_value == "trim_mean":
+            # return trimmed mean to the optimizer to prevent optimizing based on outliers
+            return trim_mean(evaluation_metric_list, proportiontocut=0.2)
+        elif settings.intermediate_value == "median":
+            return np.median(evaluation_metric_list)
+        else:
+            raise ValueError("no valid intermediate value method defined")
 
 
 def optimize(data, label, study_name):
@@ -212,7 +227,7 @@ def optimize(data, label, study_name):
             num_boost_round=100,
             # settings for lightgbm
             objective="binary",
-            metric="binary_logloss",
+            metric=settings.metric,
             verbose=-1,
             # parallelization on the level of trials is more effective
             n_jobs=1,

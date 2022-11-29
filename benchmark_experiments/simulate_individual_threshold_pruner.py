@@ -8,6 +8,7 @@
 import math
 from statistics import mean, median
 
+import numpy as np
 import optuna
 from optuna.trial import TrialState
 from scipy.stats import trim_mean
@@ -33,14 +34,21 @@ def evaluate_falsely_pruned_trials_threshold(trial, threshold, result, step_prun
         result["median_pruned_below_threshold_list"].append(median(raw_evaluation_metric_list))
         falsely_pruned = True
     # Was the globally best trial pruned, if it was below the threshold?
-    if trim_mean(raw_evaluation_metric_list, 0.2) < threshold:
+    # if trim_mean(raw_evaluation_metric_list, 0.2) < threshold:
+    if np.median(raw_evaluation_metric_list) < threshold:
         result["trimmed_mean_pruned_below_threshold_list"].append(trim_mean(raw_evaluation_metric_list, 0.2))
-        if trial.value < result["study_best_value"]:
+        print("##############################################################")
+        print("trial", trial.value)
+        print("study", result["study_best_value"])
+        print("threshold", threshold)
+        if trial.value <= result["study_best_value"]:
             result["three_layer_pruner_fails_list"].append(trial.value)
+            print('result["three_layer_pruner_fails_list"]', result["three_layer_pruner_fails_list"])
+            print("##############################################################")
         falsely_pruned = True
     if falsely_pruned:
         result["step_false_pruning_list"].append(step_pruned)
-        print('false:')
+        print("false:")
     # pprint(result)
 
 
@@ -127,7 +135,7 @@ def simulate_threshold_pruner(trial, threshold, method):
                 threshold,
                 direction_to_optimize_is_minimize=settings.direction_to_optimize_is_minimize,
                 method=method,
-                optimal_metric=settings.optimal_metric,
+                optimal_metric_value=settings.optimal_metric,
         ):
             return current_cross_validation_step
 
