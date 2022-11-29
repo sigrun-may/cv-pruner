@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch, create_autospec
 
 import numpy as np
 import pytest
-from optuna.pruners import BasePruner
+from optuna.pruners import BasePruner, NopPruner
 
 from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner
 
@@ -126,10 +126,9 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
     fake_timestamp = "fake_timestamp"
     datetime.datetime.now.return_value.isoformat.return_value = fake_timestamp
 
-    mock_pruner = MagicMock()
+    mock_pruner = create_autospec(NopPruner)
     mock_pruner.prune.side_effect = [False, True, True]
-    mock_pruner_name = "FakeMockPruner"
-    bpfw = BenchmarkPruneFunctionWrapper(mock_pruner, pruner_name=mock_pruner_name)
+    bpfw = BenchmarkPruneFunctionWrapper(mock_pruner)
 
     mock_trial = MagicMock()
     mock_trial.intermediate_values.values.return_value = [0.1, 0.2]
@@ -140,7 +139,7 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
     second_prune_result = bpfw.prune(None, mock_trial)
     assert second_prune_result
     mock_trial.set_user_attr.assert_called_with(
-        f"{mock_pruner_name}_pruned_at", {"step": 2, "timestamp": fake_timestamp}
+        "NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp}
     )
     mock_trial.set_user_attr.called_once()
 
