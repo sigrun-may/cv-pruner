@@ -3,7 +3,7 @@
 # which is available at https://opensource.org/licenses/MIT
 
 import datetime
-import math
+import sys
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -104,7 +104,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             self,
             threshold: float,
             n_warmup_steps: int = 0,
-            active_until_step: int = math.inf,
+            active_until_step: int = sys.maxint,
             extrapolation_interval: int = 1,
     ) -> None:
 
@@ -114,6 +114,11 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             raise ValueError("Number of warmup steps cannot be negative but got {}.".format(n_warmup_steps))
         if extrapolation_interval < 1:
             raise ValueError("Cross-validation folds must be at least 1 but got {}.".format(extrapolation_interval))
+
+        if not n_warmup_steps > 2:
+            raise ValueError("n_warmup_steps must be greater than 2!")
+        if not active_until_step > n_warmup_steps:
+            raise ValueError("active_until_step must be greater than n_warmup_steps!")
 
         self._threshold = threshold
         self._n_warmup_steps = n_warmup_steps
@@ -138,8 +143,8 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             folds_inner_cv=self._cross_validation_folds,
             validation_metric_history=list(intermediate_values),
             threshold_for_pruning=self._threshold,
-            start_step=self._n_warmup_steps,
-            stop_step=self._active_until_step,
+            start_step=3,  # set min value here to let the pruner decide before
+            stop_step=sys.maxint,  # set max value here to let the pruner decide before
             direction_to_optimize_is_minimize=study.direction == StudyDirection.MINIMIZE,
             method=Method.OPTIMAL_METRIC,
             optimal_metric_value=0,
