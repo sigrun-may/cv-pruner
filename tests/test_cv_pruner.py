@@ -28,7 +28,7 @@ def test_check_against_threshold_false():
         stop_step=30,
         direction_to_optimize_is_minimize=True,
         method=Method.OPTIMAL_METRIC,
-        optimal_metric=0,
+        optimal_metric_value=0,
     )
 
     assert not result
@@ -55,7 +55,7 @@ def test_check_against_threshold_true():
         stop_step=30,
         direction_to_optimize_is_minimize=True,
         method=Method.OPTIMAL_METRIC,
-        optimal_metric=0,
+        optimal_metric_value=0,
     )
 
     assert result
@@ -81,7 +81,7 @@ def test_standard_cross_validation_true():
         stop_step=30,
         direction_to_optimize_is_minimize=True,
         method=Method.OPTIMAL_METRIC,
-        optimal_metric=0,
+        optimal_metric_value=0,
     )
 
     assert result

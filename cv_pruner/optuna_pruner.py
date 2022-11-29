@@ -3,6 +3,7 @@
 # which is available at https://opensource.org/licenses/MIT
 
 import datetime
+import math
 from typing import Any, List, Optional, Union
 
 import numpy as np
@@ -10,7 +11,7 @@ import optuna
 from optuna.pruners import BasePruner
 from optuna.study import StudyDirection
 
-from cv_pruner import should_prune_against_threshold, Method
+from cv_pruner import Method, should_prune_against_threshold
 
 
 class MultiPrunerDelegate(BasePruner):
@@ -76,10 +77,10 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
         return prune_result
 
 
-class CrossValidationThresholdPruner(BasePruner):
+class RepeatedTrainingThresholdPruner(BasePruner):
     """Pruner to detect trials with insufficient performance.
 
-    Prune if a metric exceeds upper threshold,
+    Prune if an extrapolated or cumulated metric exceeds upper threshold,
     falls behind lower threshold or reaches ``nan``.
 
     Args:
@@ -89,44 +90,47 @@ class CrossValidationThresholdPruner(BasePruner):
             Or a maximum value which determines whether pruner prunes or not.
             If an extrapolated value is larger than upper, it prunes.
         n_warmup_steps:
-            Pruning is disabled if the step is less than the given number of warmup steps.
+            Pruning is disabled if the number of reported steps is less than the given number of warmup steps.
         active_until_step:
-            # TODO
-        cross_validation_folds:
+            Pruning will be disabled if the number of reported steps is greater than the
+            given number of ``active_until_step``.
+        extrapolation_interval:
             Cross-validation folds or folds of inner cross-validation in case of nested cross-validation.
             If no value has been reported at the time of a pruning check, that particular check
             will be postponed until a value is reported. Value must be at least 1.
-
     """
 
     def __init__(
             self,
             threshold: float,
             n_warmup_steps: int = 0,
-            active_until_step: int = 100,
-            cross_validation_folds: int = 1,
+            active_until_step: int = math.inf,
+            extrapolation_interval: int = 1,
     ) -> None:
 
         threshold = _check_value(threshold)
 
         if n_warmup_steps < 0:
             raise ValueError("Number of warmup steps cannot be negative but got {}.".format(n_warmup_steps))
-        if cross_validation_folds < 1:
-            raise ValueError("Cross-validation folds must be at least 1 but got {}.".format(cross_validation_folds))
+        if extrapolation_interval < 1:
+            raise ValueError("Cross-validation folds must be at least 1 but got {}.".format(extrapolation_interval))
 
         self._threshold = threshold
         self._n_warmup_steps = n_warmup_steps
         self._active_until_step = active_until_step
-        self._cross_validation_folds = cross_validation_folds
+        self._cross_validation_folds = extrapolation_interval
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
 
-        step = trial.last_step  # TODO check
+        # no values have been reported
+        step = trial.last_step
         if step is None:
             return False
 
-        n_warmup_steps = self._n_warmup_steps
-        if step < n_warmup_steps:
+        intermediate_values = trial.intermediate_values.values()
+        reported_step_count = len(intermediate_values)
+
+        if self._n_warmup_steps > reported_step_count > self._active_until_step:
             return False
 
         return should_prune_against_threshold(
@@ -137,7 +141,7 @@ class CrossValidationThresholdPruner(BasePruner):
             self._active_until_step,
             study.direction == StudyDirection.MINIMIZE,
             Method.OPTIMAL_METRIC,
-            optimal_metric=0,
+            optimal_metric_value=0,
         )
 
 
