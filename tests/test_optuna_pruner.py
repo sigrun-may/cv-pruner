@@ -2,13 +2,17 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from unittest.mock import MagicMock, patch, create_autospec
+from unittest.mock import MagicMock, patch, create_autospec, PropertyMock, Mock
 
 import numpy as np
 import pytest
+from optuna import Study
 from optuna.pruners import BasePruner, NopPruner
+from optuna.study import StudyDirection
+from optuna.trial import FrozenTrial
 
-from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner
+from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner, \
+    RepeatedTrainingThresholdPruner
 
 
 def test_MultiPrunerDelegate_prune_false():
@@ -146,3 +150,124 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
     third_prune_result = bpfw.prune(None, mock_trial)
     assert third_prune_result
     mock_trial.set_user_attr.called_once()  # not 2 times!!!
+
+
+def test_RepeatedTrainingThresholdPruner_no_prune_if_last_step_not_set():
+    mock_trial = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value=None)
+    type(mock_trial).last_step = none_property_mock
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5)
+    prune_result = rttp.prune(None, mock_trial)
+
+    assert not prune_result
+    none_property_mock.assert_called_once_with()
+
+
+@patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
+def test_RepeatedTrainingThresholdPruner_no_prune_if_before_n_warmup_steps(should_prune_against_threshold_mock):
+    should_prune_against_threshold_mock.return_value = True
+
+    # create trial_mock
+    trial_mock = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value="something")
+    type(trial_mock).last_step = none_property_mock
+    # trial.intermediate_values.values()
+    values_mock = Mock()
+    values_mock.values.return_value = range(4)
+    trial_mock.intermediate_values = values_mock
+
+    # create study_mock
+    study_mock = create_autospec(Study)
+    # study.direction == StudyDirection.MINIMIZE
+    study_mock.direction == StudyDirection.MINIMIZE
+
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5)
+    prune_result = rttp.prune(study_mock, trial_mock)
+
+    assert not prune_result
+    none_property_mock.assert_called_once_with()
+    trial_mock.intermediate_values.values.assert_called_once_with()
+    should_prune_against_threshold_mock.assert_not_called()
+
+
+@patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
+def test_RepeatedTrainingThresholdPruner_no_prune_if_after_active_until_step(should_prune_against_threshold_mock):
+    should_prune_against_threshold_mock.side_effect = RuntimeError("Should not execute this!")
+
+    # create trial_mock
+    trial_mock = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value="something")
+    type(trial_mock).last_step = none_property_mock
+    # trial.intermediate_values.values()
+    values_mock = Mock()
+    values_mock.values.return_value = range(6)
+    trial_mock.intermediate_values = values_mock
+
+    # create study_mock
+    study_mock = create_autospec(Study)
+    # study.direction == StudyDirection.MINIMIZE
+    study_mock.direction == StudyDirection.MINIMIZE
+
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, active_until_step=5)
+    prune_result = rttp.prune(study_mock, trial_mock)
+
+    assert not prune_result
+    none_property_mock.assert_called_once_with()
+    trial_mock.intermediate_values.values.assert_called_once_with()
+    should_prune_against_threshold_mock.assert_not_called()
+
+
+@patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
+def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_low_value(
+        should_prune_against_threshold_mock):
+    should_prune_against_threshold_mock.return_value = True
+
+    # create trial_mock
+    trial_mock = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value="something")
+    type(trial_mock).last_step = none_property_mock
+    # trial.intermediate_values.values()
+    values_mock = Mock()
+    values_mock.values.return_value = range(2)
+    trial_mock.intermediate_values = values_mock
+
+    # create study_mock
+    study_mock = create_autospec(Study)
+    # study.direction == StudyDirection.MINIMIZE
+    study_mock.direction == StudyDirection.MINIMIZE
+
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=2, active_until_step=5)
+    prune_result = rttp.prune(study_mock, trial_mock)
+
+    assert prune_result
+    none_property_mock.assert_called_once_with()
+    trial_mock.intermediate_values.values.assert_called_once_with()
+    should_prune_against_threshold_mock.assert_called_once()
+
+
+@patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
+def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_high_value(
+        should_prune_against_threshold_mock):
+    should_prune_against_threshold_mock.return_value = True
+
+    # create trial_mock
+    trial_mock = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value="something")
+    type(trial_mock).last_step = none_property_mock
+    # trial.intermediate_values.values()
+    values_mock = Mock()
+    values_mock.values.return_value = range(5)
+    trial_mock.intermediate_values = values_mock
+
+    # create study_mock
+    study_mock = create_autospec(Study)
+    # study.direction == StudyDirection.MINIMIZE
+    study_mock.direction == StudyDirection.MINIMIZE
+
+    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=2, active_until_step=5)
+    prune_result = rttp.prune(study_mock, trial_mock)
+
+    assert prune_result
+    none_property_mock.assert_called_once_with()
+    trial_mock.intermediate_values.values.assert_called_once_with()
+    should_prune_against_threshold_mock.assert_called_once()

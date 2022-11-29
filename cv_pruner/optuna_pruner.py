@@ -130,12 +130,12 @@ class RepeatedTrainingThresholdPruner(BasePruner):
         intermediate_values = trial.intermediate_values.values()
         reported_step_count = len(intermediate_values)
 
-        if self._n_warmup_steps > reported_step_count > self._active_until_step:
+        if reported_step_count < self._n_warmup_steps or reported_step_count > self._active_until_step:
             return False
 
         return should_prune_against_threshold(
             self._cross_validation_folds,
-            list(trial.intermediate_values.values()),
+            list(intermediate_values),
             self._threshold,
             self._n_warmup_steps,
             self._active_until_step,
