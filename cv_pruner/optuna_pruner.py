@@ -76,7 +76,7 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
 
         return prune_result
 
-
+# TODO: should optimal_metric_value be part of the initializer?
 class RepeatedTrainingThresholdPruner(BasePruner):
     """Pruner to detect trials with insufficient performance.
 
@@ -135,13 +135,13 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             return False
 
         return should_prune_against_threshold(
-            self._cross_validation_folds,
-            list(intermediate_values),
-            self._threshold,
-            self._n_warmup_steps,
-            self._active_until_step,
-            study.direction == StudyDirection.MINIMIZE,
-            Method.OPTIMAL_METRIC,
+            folds_inner_cv=self._cross_validation_folds,
+            validation_metric_history=list(intermediate_values),
+            threshold_for_pruning=self._threshold,
+            start_step=self._n_warmup_steps,
+            stop_step=self._active_until_step,
+            direction_to_optimize_is_minimize=study.direction == StudyDirection.MINIMIZE,
+            method=Method.OPTIMAL_METRIC,
             optimal_metric_value=0,
         )
 

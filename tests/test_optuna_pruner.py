@@ -2,7 +2,7 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from unittest.mock import MagicMock, patch, create_autospec, PropertyMock, Mock
+from unittest.mock import MagicMock, Mock, PropertyMock, create_autospec, patch
 
 import numpy as np
 import pytest
@@ -11,8 +11,12 @@ from optuna.pruners import BasePruner, NopPruner
 from optuna.study import StudyDirection
 from optuna.trial import FrozenTrial
 
-from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner, \
-    RepeatedTrainingThresholdPruner
+from cv_pruner.optuna_pruner import (
+    BenchmarkPruneFunctionWrapper,
+    MultiPrunerDelegate,
+    NoFeatureSelectedPruner,
+    RepeatedTrainingThresholdPruner,
+)
 
 
 def test_MultiPrunerDelegate_prune_false():
@@ -142,9 +146,7 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
 
     second_prune_result = bpfw.prune(None, mock_trial)
     assert second_prune_result
-    mock_trial.set_user_attr.assert_called_with(
-        "NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp}
-    )
+    mock_trial.set_user_attr.assert_called_with("NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp})
     mock_trial.set_user_attr.called_once()
 
     third_prune_result = bpfw.prune(None, mock_trial)
@@ -219,7 +221,8 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_after_active_until_step(sho
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
 def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_low_value(
-        should_prune_against_threshold_mock):
+        should_prune_against_threshold_mock,
+):
     should_prune_against_threshold_mock.return_value = True
 
     # create trial_mock
@@ -247,7 +250,8 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
 def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_high_value(
-        should_prune_against_threshold_mock):
+        should_prune_against_threshold_mock,
+):
     should_prune_against_threshold_mock.return_value = True
 
     # create trial_mock
