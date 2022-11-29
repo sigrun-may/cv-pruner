@@ -2,19 +2,20 @@
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, create_autospec
 
 import numpy as np
 import pytest
+from optuna.pruners import BasePruner
 
 from cv_pruner.optuna_pruner import BenchmarkPruneFunctionWrapper, MultiPrunerDelegate, NoFeatureSelectedPruner
 
 
 def test_MultiPrunerDelegate_prune_false():
-    pruner_1 = MagicMock()
+    pruner_1 = create_autospec(BasePruner)
     pruner_1.prune.return_value = False
 
-    pruner_2 = MagicMock()
+    pruner_2 = create_autospec(BasePruner)
     pruner_2.prune.return_value = False
 
     pruner_list = [pruner_1, pruner_2]
@@ -28,10 +29,10 @@ def test_MultiPrunerDelegate_prune_false():
 
 
 def test_MultiPrunerDelegate_prune_true():
-    pruner_1 = MagicMock()
+    pruner_1 = create_autospec(BasePruner)
     pruner_1.prune.return_value = False
 
-    pruner_2 = MagicMock()
+    pruner_2 = create_autospec(BasePruner)
     pruner_2.prune.return_value = True
 
     pruner_list = [pruner_1, pruner_2]
@@ -45,10 +46,10 @@ def test_MultiPrunerDelegate_prune_true():
 
 
 def test_MultiPrunerDelegate_prune_true_eager():
-    pruner_1 = MagicMock()
+    pruner_1 = create_autospec(BasePruner)
     pruner_1.prune.return_value = True
 
-    pruner_2 = MagicMock()
+    pruner_2 = create_autospec(BasePruner)
     pruner_2.prune.return_value = False
 
     pruner_list = [pruner_1, pruner_2]
@@ -62,10 +63,10 @@ def test_MultiPrunerDelegate_prune_true_eager():
 
 
 def test_MultiPrunerDelegate_prune_true_not_eager():
-    pruner_1 = MagicMock()
+    pruner_1 = create_autospec(BasePruner)
     pruner_1.prune.return_value = True
 
-    pruner_2 = MagicMock()
+    pruner_2 = create_autospec(BasePruner)
     pruner_2.prune.return_value = False
 
     pruner_list = [pruner_1, pruner_2]
