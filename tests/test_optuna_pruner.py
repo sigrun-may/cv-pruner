@@ -15,6 +15,7 @@ from cv_pruner.optuna_pruner import (
     BenchmarkPruneFunctionWrapper,
     MultiPrunerDelegate,
     NoModelBuildPruner,
+    RepeatedTrainingPrunerWrapper,
     RepeatedTrainingThresholdPruner,
 )
 
@@ -263,7 +264,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
 
     # create trial_mock
     trial_mock = create_autospec(FrozenTrial)
-    none_property_mock = PropertyMock(return_value="something")
+    none_property_mock = PropertyMock(return_value="something")  # TODO: rename
     type(trial_mock).last_step = none_property_mock
     # trial.intermediate_values.values()
     values_mock = Mock()
@@ -282,3 +283,15 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     none_property_mock.assert_called_once_with()
     trial_mock.intermediate_values.values.assert_called_once_with()
     should_prune_against_threshold_mock.assert_called_once()
+
+
+def test_RepeatedTrainingPrunerWrapper_no_intermediate_values():
+    trial_mock = create_autospec(FrozenTrial)
+    none_property_mock = PropertyMock(return_value=None)
+    type(trial_mock).last_step = none_property_mock
+    pruner_wrapper = RepeatedTrainingPrunerWrapper(None, None)
+
+    prune_result = pruner_wrapper.prune(None, trial_mock)
+
+    assert not prune_result
+    none_property_mock.assert_called_once_with()
