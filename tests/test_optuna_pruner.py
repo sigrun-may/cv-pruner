@@ -14,7 +14,7 @@ from optuna.trial import FrozenTrial
 from cv_pruner.optuna_pruner import (
     BenchmarkPruneFunctionWrapper,
     MultiPrunerDelegate,
-    NoFeatureSelectedPruner,
+    NoModelBuildPruner,
     RepeatedTrainingThresholdPruner,
 )
 
@@ -89,44 +89,44 @@ def test_MultiPrunerDelegate_prune_true_not_eager():
 
 def test_NoFeatureSelectedPruner_all_zero_list():
     feature_values = [0.0, 0.0]
-    nfsp = NoFeatureSelectedPruner()
-    nfsp.communicate_feature_values(feature_values)
+    nmbp = NoModelBuildPruner()
+    nmbp.communicate_feature_values(feature_values)
 
-    prune_result = nfsp.prune(None, None)
+    prune_result = nmbp.prune(None, None)
     assert prune_result
 
 
 def test_NoFeatureSelectedPruner_all_zero_np():
     feature_values = np.array([0.0, 0.0])
-    nfsp = NoFeatureSelectedPruner()
-    nfsp.communicate_feature_values(feature_values)
+    nmbp = NoModelBuildPruner()
+    nmbp.communicate_feature_values(feature_values)
 
-    prune_result = nfsp.prune(None, None)
+    prune_result = nmbp.prune(None, None)
     assert prune_result
 
 
 def test_NoFeatureSelectedPruner_not_all_zero_list():
     feature_values = [0.0, 0.1]
-    nfsp = NoFeatureSelectedPruner()
-    nfsp.communicate_feature_values(feature_values)
+    nmbp = NoModelBuildPruner()
+    nmbp.communicate_feature_values(feature_values)
 
-    prune_result = nfsp.prune(None, None)
+    prune_result = nmbp.prune(None, None)
     assert not prune_result
 
 
 def test_NoFeatureSelectedPruner_not_all_zero_np():
     feature_values = np.array([0.0, 0.1])
-    nfsp = NoFeatureSelectedPruner()
-    nfsp.communicate_feature_values(feature_values)
+    nmbp = NoModelBuildPruner()
+    nmbp.communicate_feature_values(feature_values)
 
-    prune_result = nfsp.prune(None, None)
+    prune_result = nmbp.prune(None, None)
     assert not prune_result
 
 
 def test_NoFeatureSelectedPruner_feature_values_not_set():
-    nfsp = NoFeatureSelectedPruner()
+    nmbp = NoModelBuildPruner()
     with pytest.raises(RuntimeError):
-        nfsp.prune(None, None)
+        nmbp.prune(None, None)
 
 
 @patch("cv_pruner.optuna_pruner.datetime")

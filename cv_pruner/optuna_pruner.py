@@ -40,7 +40,7 @@ class MultiPrunerDelegate(BasePruner):
         return any(pruner_results)
 
 
-class NoFeatureSelectedPruner(BasePruner):
+class NoModelBuildPruner(BasePruner):
     def __init__(self):
         self.feature_values = None
 
@@ -77,7 +77,7 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
         return prune_result
 
 
-# TODO: should optimal_metric_value be part of the initializer?
+#  TODO: should optimal_metric_value be part of the initializer?
 class RepeatedTrainingThresholdPruner(BasePruner):
     """Pruner to detect trials with insufficient performance.
 
