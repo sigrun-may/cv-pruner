@@ -90,44 +90,44 @@ def test_MultiPrunerDelegate_prune_true_not_eager():
 
 def test_NoFeatureSelectedPruner_all_zero_list():
     feature_values = [0.0, 0.0]
-    nmbp = NoModelBuildPruner()
-    nmbp.communicate_feature_values(feature_values)
+    pruner = NoModelBuildPruner()
+    pruner.communicate_feature_values(feature_values)
 
-    prune_result = nmbp.prune(None, None)
+    prune_result = pruner.prune(None, None)
     assert prune_result
 
 
 def test_NoFeatureSelectedPruner_all_zero_np():
     feature_values = np.array([0.0, 0.0])
-    nmbp = NoModelBuildPruner()
-    nmbp.communicate_feature_values(feature_values)
+    pruner = NoModelBuildPruner()
+    pruner.communicate_feature_values(feature_values)
 
-    prune_result = nmbp.prune(None, None)
+    prune_result = pruner.prune(None, None)
     assert prune_result
 
 
 def test_NoFeatureSelectedPruner_not_all_zero_list():
     feature_values = [0.0, 0.1]
-    nmbp = NoModelBuildPruner()
-    nmbp.communicate_feature_values(feature_values)
+    pruner = NoModelBuildPruner()
+    pruner.communicate_feature_values(feature_values)
 
-    prune_result = nmbp.prune(None, None)
+    prune_result = pruner.prune(None, None)
     assert not prune_result
 
 
 def test_NoFeatureSelectedPruner_not_all_zero_np():
     feature_values = np.array([0.0, 0.1])
-    nmbp = NoModelBuildPruner()
-    nmbp.communicate_feature_values(feature_values)
+    pruner = NoModelBuildPruner()
+    pruner.communicate_feature_values(feature_values)
 
-    prune_result = nmbp.prune(None, None)
+    prune_result = pruner.prune(None, None)
     assert not prune_result
 
 
 def test_NoFeatureSelectedPruner_feature_values_not_set():
-    nmbp = NoModelBuildPruner()
+    pruner = NoModelBuildPruner()
     with pytest.raises(RuntimeError):
-        nmbp.prune(None, None)
+        pruner.prune(None, None)
 
 
 @patch("cv_pruner.optuna_pruner.datetime")
@@ -137,24 +137,24 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
 
     mock_pruner = create_autospec(NopPruner)
     mock_pruner.prune.side_effect = [False, True, True]
-    bpfw = BenchmarkPruneFunctionWrapper(mock_pruner)
+    pruner = BenchmarkPruneFunctionWrapper(mock_pruner)
 
     mock_trial = MagicMock()
     mock_trial.intermediate_values.values.return_value = [0.1, 0.2]
 
-    first_prune_result = bpfw.prune(None, mock_trial)
+    first_prune_result = pruner.prune(None, mock_trial)
     assert not first_prune_result  # we never prune
-    assert not bpfw.prune_reported
+    assert not pruner.prune_reported
 
-    second_prune_result = bpfw.prune(None, mock_trial)
+    second_prune_result = pruner.prune(None, mock_trial)
     assert not second_prune_result  # we never prune
-    assert bpfw.prune_reported
+    assert pruner.prune_reported
     mock_trial.set_user_attr.assert_called_with("NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp})
     mock_trial.set_user_attr.called_once()
 
-    third_prune_result = bpfw.prune(None, mock_trial)
+    third_prune_result = pruner.prune(None, mock_trial)
     assert not third_prune_result  # we never prune
-    assert bpfw.prune_reported
+    assert pruner.prune_reported
     mock_trial.set_user_attr.called_once()  # not 2 times!!!
 
 
@@ -165,8 +165,8 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_last_step_not_set(should_pr
     mock_trial = create_autospec(FrozenTrial)
     none_property_mock = PropertyMock(return_value=None)
     type(mock_trial).last_step = none_property_mock
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5)
-    prune_result = rttp.prune(None, mock_trial)
+    pruner = RepeatedTrainingThresholdPruner(threshold=0.5)
+    prune_result = pruner.prune(None, mock_trial)
 
     assert not prune_result
     none_property_mock.assert_called_once_with()
@@ -191,8 +191,8 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_before_n_warmup_steps(shoul
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5)
-    prune_result = rttp.prune(study_mock, trial_mock)
+    pruner = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5)
+    prune_result = pruner.prune(study_mock, trial_mock)
 
     assert not prune_result
     none_property_mock.assert_called_once_with()
@@ -218,8 +218,8 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_after_active_until_step(sho
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, active_until_step=5)
-    prune_result = rttp.prune(study_mock, trial_mock)
+    pruner = RepeatedTrainingThresholdPruner(threshold=0.5, active_until_step=5)
+    prune_result = pruner.prune(study_mock, trial_mock)
 
     assert not prune_result
     none_property_mock.assert_called_once_with()
@@ -247,8 +247,8 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
-    prune_result = rttp.prune(study_mock, trial_mock)
+    pruner = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
+    prune_result = pruner.prune(study_mock, trial_mock)
 
     assert prune_result
     none_property_mock.assert_called_once_with()
@@ -264,8 +264,8 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
 
     # create trial_mock
     trial_mock = create_autospec(FrozenTrial)
-    none_property_mock = PropertyMock(return_value="something")  # TODO: rename
-    type(trial_mock).last_step = none_property_mock
+    something_property_mock = PropertyMock(return_value="something")
+    type(trial_mock).last_step = something_property_mock
     # trial.intermediate_values.values()
     values_mock = Mock()
     values_mock.values.return_value = range(10)
@@ -276,11 +276,11 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
     # study.direction == StudyDirection.MINIMIZE
     study_mock.direction == StudyDirection.MINIMIZE
 
-    rttp = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
-    prune_result = rttp.prune(study_mock, trial_mock)
+    pruner = RepeatedTrainingThresholdPruner(threshold=0.5, n_warmup_steps=5, active_until_step=10)
+    prune_result = pruner.prune(study_mock, trial_mock)
 
     assert prune_result
-    none_property_mock.assert_called_once_with()
+    something_property_mock.assert_called_once_with()
     trial_mock.intermediate_values.values.assert_called_once_with()
     should_prune_against_threshold_mock.assert_called_once()
 
