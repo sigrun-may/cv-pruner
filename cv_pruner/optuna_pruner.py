@@ -1,16 +1,19 @@
 # Copyright (c) 2022 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
-
+import collections
+import copy
 import datetime
 import logging
 import sys
-from typing import Any, List, Optional, Union
+from functools import partial
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 import optuna
 from optuna.pruners import BasePruner
 from optuna.study import StudyDirection
+from scipy.stats import trim_mean
 
 from cv_pruner import Method, should_prune_against_threshold
 
@@ -79,6 +82,52 @@ class BenchmarkPruneFunctionWrapper(BasePruner):
             self.prune_reported = True
 
         return False
+
+
+class RepeatedTrainingPrunerWrapper(BasePruner):
+    def __init__(
+            self,
+            pruner: BasePruner,
+            aggregate_function: Optional[Callable[[List[float]], float]] = None,
+            inner_cv_folds: int = 1,
+    ):
+        self.pruner = pruner
+        if aggregate_function is None:
+            aggregate_function = partial(trim_mean, proportiontocut=0.2)
+        self.aggregate_function = aggregate_function
+        self.inner_cv_folds = inner_cv_folds
+
+    def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
+        # no values have been reported
+        step = trial.last_step
+        if step is None:
+            return False
+
+        prune_result = False
+
+        inner_cv_complete = len(trial.intermediate_values.items()) % self.inner_cv_folds == 0
+        if inner_cv_complete:
+
+            # clone trial to adapt and replace intermediate values
+            trial_clone = copy.deepcopy(trial)
+
+            intermediate_values: Optional[Dict[int, float]] = trial_clone.intermediate_values
+            # sort intermediate values by step (ascending)
+            intermediate_values = collections.OrderedDict(sorted(intermediate_values.items()))
+
+            # cumulate intermediate values to aggregate cross-validation to prevent pruning
+            # based on outliers
+            values = []
+            aggregated_intermediate_values = {}
+            for step, intermediate_value in intermediate_values.items():
+                values.append(intermediate_value)
+                if len(values) % self.inner_cv_folds == 0:
+                    aggregated_value = self.aggregate_function(values)
+                    aggregation_step = int(len(values) / self.inner_cv_folds)
+                    aggregated_intermediate_values[aggregation_step] = aggregated_value
+            trial_clone.intermediate_values = aggregated_intermediate_values
+            prune_result = self.pruner.prune(study, trial_clone)
+        return prune_result
 
 
 #  TODO: should optimal_metric_value be part of the initializer?
