@@ -10,6 +10,7 @@ from optuna import Study
 from optuna.pruners import BasePruner, NopPruner
 from optuna.study import StudyDirection
 from optuna.trial import FrozenTrial
+from scipy.stats import trim_mean
 
 from cv_pruner.optuna_pruner import (
     BenchmarkPruneFunctionWrapper,
@@ -286,12 +287,26 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
 
 
 def test_RepeatedTrainingPrunerWrapper_no_intermediate_values():
-    trial_mock = create_autospec(FrozenTrial)
-    none_property_mock = PropertyMock(return_value=None)
-    type(trial_mock).last_step = none_property_mock
-    pruner_wrapper = RepeatedTrainingPrunerWrapper(None, None)
+    values = [0.1, 0.1, 0.2, 0.3, 0.3]
+    expected_aggregated_value = trim_mean(values[:5], proportiontocut=0.2)
+    intermediate_values = {k: v for k, v in enumerate(values)}
 
+    # build trial_mock
+    trial_mock = MagicMock()
+    last_step_property_mock = PropertyMock(return_value=values[-1])
+    type(trial_mock).last_step = last_step_property_mock
+    intermediate_values_property_mock = PropertyMock(return_value=intermediate_values)
+    trial_mock.intermediate_values = intermediate_values_property_mock
+
+    # build pruner mock
+    pruner_mock = create_autospec(NopPruner)
+    pruner_mock.prune.return_value = True
+
+    pruner_wrapper = RepeatedTrainingPrunerWrapper(pruner_mock, inner_cv_folds=5)
     prune_result = pruner_wrapper.prune(None, trial_mock)
 
-    assert not prune_result
-    none_property_mock.assert_called_once_with()
+    assert prune_result
+    last_step_property_mock.assert_called_once_with()
+    # TODO: check if pruner_mock.prune was called with correct values
+    call_args = pruner_mock.prune.call_args.args
+    pass
