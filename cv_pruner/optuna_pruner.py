@@ -30,7 +30,7 @@ class MultiPrunerDelegate(BasePruner):
         Args:
             pruner_list: List of pruners to delegate to.
             prune_eager: If ``True`` then ``prune`` will return as soon as one pruner returns ``True``.
-                If ``False`` then we iterate all pruners and then return ``True`` if
+                If ``False`` then all pruners are iterated. Return ``True`` if
                 at least one of them returned ``True``.
         """
         self.pruner_list = pruner_list
@@ -40,7 +40,7 @@ class MultiPrunerDelegate(BasePruner):
         pruner_results = []
         for pruner in self.pruner_list:
             pruner_result = pruner.prune(study, trial)
-            if self.prune_eager and pruner_result:
+            if pruner_result and self.prune_eager:
                 return True
             else:
                 pruner_results.append(pruner_result)
@@ -80,6 +80,12 @@ class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPru
             intermediate_values = trial.intermediate_values.values()
             step = len(intermediate_values)
             trial.set_user_attr(f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
+            ######################################
+            print('here')
+            print(trial.user_attrs[f"{self.pruner_name}_pruned_at"])
+            for attr in trial.user_attrs:
+                print(attr)
+            ######################################
             self.prune_reported = True
 
         return False
@@ -163,7 +169,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             n_warmup_steps: int = 0,
             active_until_step: int = sys.maxsize,
             extrapolation_interval: int = 1,
-            extrapolation_method: cv_pruner.Method = Method.OPTIMAL_METRIC
+            extrapolation_method: cv_pruner.Method = Method.OPTIMAL_METRIC,
     ) -> None:
 
         threshold = _check_value(threshold)
