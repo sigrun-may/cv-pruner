@@ -145,17 +145,17 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
 
     first_prune_result = pruner.prune(None, mock_trial)
     assert not first_prune_result  # we never prune
-    assert not pruner.prune_reported
+    assert not pruner.pruned_trial_numbers
 
     second_prune_result = pruner.prune(None, mock_trial)
     assert not second_prune_result  # we never prune
-    assert pruner.prune_reported
+    assert len(pruner.pruned_trial_numbers) == 1
     mock_trial.set_user_attr.assert_called_with("NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp})
     mock_trial.set_user_attr.called_once()
 
     third_prune_result = pruner.prune(None, mock_trial)
     assert not third_prune_result  # we never prune
-    assert pruner.prune_reported
+    assert len(pruner.pruned_trial_numbers) == 1
     mock_trial.set_user_attr.called_once()  # not 2 times!!!
 
 

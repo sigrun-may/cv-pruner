@@ -67,26 +67,27 @@ class NoModelBuildPruner(BasePruner):
 class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPrunerWrapper
     def __init__(self, pruner: BasePruner, pruner_name: Optional[str] = None):
         self.pruner = pruner
-        self.prune_reported = False
+        self.pruned_trial_numbers = set()
         if pruner_name is None:
             pruner_name = self.pruner.__class__.__name__
         self.pruner_name = pruner_name
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
         prune_result = self.pruner.prune(study, trial)
-        if prune_result and not self.prune_reported:
+        if prune_result and trial.number not in self.pruned_trial_numbers:
             _logger.info(f"BenchmarkPruneFunctionWrapper for {self.pruner_name} pruned.")
             pruning_timestamp = datetime.datetime.now().isoformat(timespec="microseconds")  # like Optuna
             intermediate_values = trial.intermediate_values.values()
             step = len(intermediate_values)
             trial.set_user_attr(f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
+            self.pruned_trial_numbers.add(trial.number)
             ######################################
-            print('here')
             print(trial.user_attrs[f"{self.pruner_name}_pruned_at"])
+            print('trial.number', trial.number)
+            print(self.pruned_trial_numbers)
             for attr in trial.user_attrs:
                 print(attr)
             ######################################
-            self.prune_reported = True
 
         return False
 
