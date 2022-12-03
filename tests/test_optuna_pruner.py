@@ -143,20 +143,24 @@ def test_BenchmarkPruneFunctionWrapper(datetime):
     mock_trial = MagicMock()
     mock_trial.intermediate_values.values.return_value = [0.1, 0.2]
 
-    first_prune_result = pruner.prune(None, mock_trial)
+    study_mock = MagicMock()
+    # study._storage.set_trial_user_attr(trial._trial_id, f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
+    study_mock._storage.set_trial_user_attr.return_value = None
+
+    first_prune_result = pruner.prune(study_mock, mock_trial)
     assert not first_prune_result  # we never prune
     assert not pruner.pruned_trial_numbers
 
-    second_prune_result = pruner.prune(None, mock_trial)
+    second_prune_result = pruner.prune(study_mock, mock_trial)
     assert not second_prune_result  # we never prune
     assert len(pruner.pruned_trial_numbers) == 1
-    mock_trial.set_user_attr.assert_called_with("NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp})
-    mock_trial.set_user_attr.called_once()
+    # mock_trial.set_user_attr.assert_called_with("NopPruner_pruned_at", {"step": 2, "timestamp": fake_timestamp})
+    study_mock._storage.set_trial_user_attr.assert_called_once()
 
-    third_prune_result = pruner.prune(None, mock_trial)
+    third_prune_result = pruner.prune(study_mock, mock_trial)
     assert not third_prune_result  # we never prune
     assert len(pruner.pruned_trial_numbers) == 1
-    mock_trial.set_user_attr.called_once()  # not 2 times!!!
+    study_mock._storage.set_trial_user_attr.assert_called_once()
 
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")

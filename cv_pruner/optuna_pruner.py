@@ -79,16 +79,11 @@ class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPru
             pruning_timestamp = datetime.datetime.now().isoformat(timespec="microseconds")  # like Optuna
             intermediate_values = trial.intermediate_values.values()
             step = len(intermediate_values)
-            trial.set_user_attr(f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp})
+            study._storage.set_trial_user_attr(
+                trial._trial_id, f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp}
+            )
             self.pruned_trial_numbers.add(trial.number)
-            ######################################
-            print(trial.user_attrs[f"{self.pruner_name}_pruned_at"])
-            print('trial.number', trial.number)
-            print(self.pruned_trial_numbers)
-            for attr in trial.user_attrs:
-                print(attr)
-            ######################################
-
+            _logger.debug(self.pruner_name, step)
         return False
 
 
