@@ -35,16 +35,20 @@ for summary in summaries:
             print(trial.number)
             mean_raw_value = []
             trim_mean_raw_value = []
+            median_raw_value = []
             for j in range(1, len(trial.user_attrs["raw_evaluation_metric_list"]) + 1):
                 mean_raw_value.append(mean(trial.user_attrs["raw_evaluation_metric_list"][:j]))
                 trim_mean_raw_value.append(trim_mean(trial.user_attrs["raw_evaluation_metric_list"][:j], 0.2))
+                median_raw_value.append(np.median(trial.user_attrs["raw_evaluation_metric_list"][:j]))
 
             evaluation_metric_df = pd.DataFrame()
             evaluation_metric_df["logloss"] = trial.user_attrs["raw_evaluation_metric_list"]
             evaluation_metric_df["mean logloss"] = mean_raw_value
             evaluation_metric_df["trim_mean logloss"] = trim_mean_raw_value
-            evaluation_metric_df["step of nested cross-validation"] = np.array(
-                range(len(trial.user_attrs["raw_evaluation_metric_list"]))) + 1
+            evaluation_metric_df["median logloss"] = median_raw_value
+            evaluation_metric_df["step of nested cross-validation"] = (
+                    np.array(range(len(trial.user_attrs["raw_evaluation_metric_list"]))) + 1
+            )
 
             raw_evaluation_metric_list = trial.user_attrs["raw_evaluation_metric_list"]
             reduced_variance_list = []
@@ -91,7 +95,7 @@ for summary in summaries:
                 cumulated_evaluation_metric_df["outer folds of nested cross-validation"]
             )
 
-            sns.set(rc={'figure.figsize': (20, 16)})
+            sns.set(rc={"figure.figsize": (20, 16)})
             sns.scatterplot(
                 y=evaluation_metric_df["logloss"],
                 x=evaluation_metric_df["step of nested cross-validation"],
@@ -114,24 +118,23 @@ for summary in summaries:
                 color="brown",
             )
             sns.lineplot(
+                y=evaluation_metric_df["median logloss"],
+                x=evaluation_metric_df["step of nested cross-validation"],
+                color="purple",
+            )
+            sns.lineplot(
                 y=cumulated_evaluation_metric_df["cummulated median logloss"],
-                x=cumulated_evaluation_metric_df[
-                    "outer folds of nested cross-validation"
-                ],
+                x=cumulated_evaluation_metric_df["outer folds of nested cross-validation"],
                 color="green",
             )
             sns.lineplot(
                 y=cumulated_evaluation_metric_df["cummulated mean logloss"],
-                x=cumulated_evaluation_metric_df[
-                    "outer folds of nested cross-validation"
-                ],
+                x=cumulated_evaluation_metric_df["outer folds of nested cross-validation"],
                 color="black",
             )
             sns.lineplot(
                 y=cumulated_evaluation_metric_df["cummulated logloss"],
-                x=cumulated_evaluation_metric_df[
-                    "outer folds of nested cross-validation"
-                ],
+                x=cumulated_evaluation_metric_df["outer folds of nested cross-validation"],
                 color="blue",
             )
             # sns.lineplot(
@@ -143,12 +146,17 @@ for summary in summaries:
             # )
             orange_patch = mpatches.Patch(color="orange", label="individual objective value")
             red_patch = mpatches.Patch(color="red", label="cumulated mean objective value")
-            blue_patch = mpatches.Patch(color="blue",
-                                        label="cumulated 20% trimmed mean objective value\nfor each iteration of outer cross-validation only")
-            green_patch = mpatches.Patch(color="green",
-                                         label="cumulated median objective value\nfor each iteration of outer cross-validation only")
-            black_patch = mpatches.Patch(color="black",
-                                         label="cumulated mean objective\nfor each iteration of outer cross-validation only")
+            blue_patch = mpatches.Patch(
+                color="blue",
+                label="cumulated 20% trimmed mean objective value\nfor each iteration of outer cross-validation only",
+            )
+            green_patch = mpatches.Patch(
+                color="green",
+                label="cumulated median objective value\nfor each iteration of outer cross-validation only",
+            )
+            black_patch = mpatches.Patch(
+                color="black", label="cumulated mean objective\nfor each iteration of outer cross-validation only"
+            )
             # pyplot.legend(handles=[red_patch])  # cumulated mean only
             pyplot.legend(handles=[orange_patch, red_patch, blue_patch, green_patch, black_patch])
             pyplot.show()
