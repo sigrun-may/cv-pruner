@@ -15,6 +15,7 @@ from optuna.pruners import BasePruner
 from optuna.study import StudyDirection
 from scipy.stats import trim_mean
 
+import cv_pruner
 from cv_pruner import Method, should_prune_against_threshold
 
 _logger = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ class NoModelBuildPruner(BasePruner):
         return np.sum(self.feature_values != 0) == 0
 
 
-class BenchmarkPruneFunctionWrapper(BasePruner):
+class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPrunerWrapper
     def __init__(self, pruner: BasePruner, pruner_name: Optional[str] = None):
         self.pruner = pruner
         self.prune_reported = False
@@ -123,7 +124,9 @@ class RepeatedTrainingPrunerWrapper(BasePruner):
                 values.append(intermediate_value)
                 if len(values) % self.inner_cv_folds == 0:
                     aggregated_value = self.aggregate_function(values)
-                    aggregation_step = int(len(values) / self.inner_cv_folds)
+                    aggregation_step = int(
+                        len(values) / self.inner_cv_folds
+                    )  # TODO: do we want to say "-1" here? So we are zero based?
                     aggregated_intermediate_values[aggregation_step] = aggregated_value
             trial_clone.intermediate_values = aggregated_intermediate_values
             prune_result = self.pruner.prune(study, trial_clone)
@@ -157,9 +160,10 @@ class RepeatedTrainingThresholdPruner(BasePruner):
     def __init__(
             self,
             threshold: float,
-            n_warmup_steps: int = 3,
+            n_warmup_steps: int = 0,
             active_until_step: int = sys.maxsize,
             extrapolation_interval: int = 1,
+            extrapolation_method: cv_pruner.Method = Method.OPTIMAL_METRIC
     ) -> None:
 
         threshold = _check_value(threshold)
@@ -168,9 +172,6 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             raise ValueError("Number of warmup steps cannot be negative but got {}.".format(n_warmup_steps))
         if extrapolation_interval < 1:
             raise ValueError("Cross-validation folds must be at least 1 but got {}.".format(extrapolation_interval))
-
-        if not n_warmup_steps > 2:
-            raise ValueError("n_warmup_steps must be greater than 2!")
         if not active_until_step > n_warmup_steps:
             raise ValueError("active_until_step must be greater than n_warmup_steps!")
 
@@ -178,6 +179,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
         self._n_warmup_steps = n_warmup_steps
         self._active_until_step = active_until_step
         self._cross_validation_folds = extrapolation_interval
+        self._extrapolation_method = extrapolation_method
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
 
@@ -200,7 +202,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             start_step=3,  # set min value here to let the pruner decide before
             stop_step=sys.maxsize,  # set max value here to let the pruner decide before
             direction_to_optimize_is_minimize=study.direction == StudyDirection.MINIMIZE,
-            method=Method.OPTIMAL_METRIC,
+            method=self._extrapolation_method,
             optimal_metric_value=0,
         )
 
