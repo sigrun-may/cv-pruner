@@ -21,12 +21,9 @@ from cv_pruner.optuna_pruner import (
     RepeatedTrainingPrunerWrapper,
     RepeatedTrainingThresholdPruner,
 )
-from data_loader.data_loader import load_colon_data
 
 """Accelerating embedded feature selection with combined pruning."""
 
-# Parse the data
-data, label = load_colon_data()
 inner_folds: int = 10
 
 
@@ -67,7 +64,7 @@ def combined_cv_pruner_factory(inner_cv_folds, threshold, extrapolation_method, 
     return compound_pruner, no_model_build_pruner
 
 
-def _optuna_objective(trial, no_model_build_pruner: NoModelBuildPruner):
+def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPruner):
     current_step_of_complete_nested_cross_validation = 0
     validation_metric_history = []
 
@@ -142,7 +139,7 @@ def _optuna_objective(trial, no_model_build_pruner: NoModelBuildPruner):
     # return np.mean(validation_metric_history)
 
 
-def main():
+def main(data, label, study_name):
     pruner, no_model_build_pruner = combined_cv_pruner_factory(
         inner_cv_folds=inner_folds,
         threshold=0.36,
@@ -176,13 +173,14 @@ def main():
     # )
     study = optuna.create_study(
         storage="sqlite:///optuna_pruner_experiment.db",
-        study_name="colon",
+        study_name=study_name,
         direction="minimize",
         pruner=pruner,
         load_if_exists=True,
     )
 
-    optuna_objective_partial = partial(_optuna_objective, no_model_build_pruner=no_model_build_pruner)
+    optuna_objective_partial = partial(_optuna_objective, data=data, label=label,
+                                       no_model_build_pruner=no_model_build_pruner)
 
     start_time = datetime.datetime.now()
     study.optimize(
@@ -197,4 +195,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Parse the data
+    from data_loader.data_loader import load_colon_data
+
+    data_df, label_df = load_colon_data()
+    main(data_df, label_df, "study_name")

@@ -4,11 +4,9 @@
 # which is available at https://opensource.org/licenses/MIT
 
 """TODO: add docstring."""
+import datetime
 
-from datetime import timedelta
-from timeit import default_timer as time
-
-import hpo_pruner_simulation
+import benchmark_combined_pruner
 from data_loader import data_loader
 
 
@@ -21,14 +19,15 @@ def colon_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(6):
-        start = time()
-        study_name = "colon_cv_pruner_median" + str(i)
+    for i in range(30):
+        start_time = datetime.datetime.now()
+        study_name = f"colon_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            hpo_pruner_simulation.optimize(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name),
         )
-        print("duration colon:", timedelta(seconds=time() - start))
+        stop_time = datetime.datetime.now()
+        print("duration colon:", stop_time - start_time)
 
 
 def prostate_experiment():
@@ -40,14 +39,15 @@ def prostate_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(6):
-        start = time()
-        study_name = "prostate_cv_pruner_median" + str(i)
+    for i in range(30):
+        start_time = datetime.datetime.now()
+        study_name = f"prostate_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            hpo_pruner_simulation.optimize(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name),
         )
-        print("duration prostate:", timedelta(seconds=time() - start))
+        stop_time = datetime.datetime.now()
+        print("duration colon:", stop_time - start_time)
 
 
 def leukemia_experiment():
@@ -59,14 +59,15 @@ def leukemia_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(6):
-        start = time()
-        study_name = "leukemia_cv_pruner_median" + str(i)
+    for i in range(30):
+        start_time = datetime.datetime.now()
+        study_name = f"leukemia_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            hpo_pruner_simulation.optimize(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name),
         )
-        print("duration leukemia:", timedelta(seconds=time() - start))
+        stop_time = datetime.datetime.now()
+        print("duration colon:", stop_time - start_time)
 
 
 def main():
