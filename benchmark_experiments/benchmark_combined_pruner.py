@@ -103,8 +103,8 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
                 bagging_fraction=trial.suggest_float("bagging_fraction", 0.1, 1.0),
                 bagging_freq=trial.suggest_int("bagging_freq", 1, 10),
                 objective="binary",
-                # metric="binary_logloss",
-                metric="l1",
+                metric="binary_logloss",
+                # metric="l1",
                 boosting_type="rf",
                 verbose=-1,
             )
@@ -123,8 +123,7 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
                 valid_sets=[validation_data],
                 callbacks=[lgb.record_evaluation(eval_result)],
             )
-            best_score = model.best_score["valid_0"]["l1"]
-            # validation_metric_history.append(model.best_score["valid_0"]["binary_logloss"])
+            best_score = model.best_score["valid_0"]["binary_logloss"]
             validation_metric_history.append(best_score)
 
             trial.report(best_score, current_step_of_complete_nested_cross_validation)
@@ -139,10 +138,10 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
     # return np.mean(validation_metric_history)
 
 
-def main(data, label, study_name):
+def main(data, label, study_name, threshold):
     pruner, no_model_build_pruner = combined_cv_pruner_factory(
         inner_cv_folds=inner_folds,
-        threshold=0.36,
+        threshold=threshold,
         comparison_based_pruner=PercentilePruner(
             percentile=25,
             n_startup_trials=1,
@@ -178,6 +177,7 @@ def main(data, label, study_name):
         pruner=pruner,
         load_if_exists=True,
     )
+    study.set_user_attr('threshold', threshold)
 
     optuna_objective_partial = partial(_optuna_objective, data=data, label=label,
                                        no_model_build_pruner=no_model_build_pruner)
@@ -186,12 +186,13 @@ def main(data, label, study_name):
     study.optimize(
         optuna_objective_partial,
         n_trials=40,  # number of trials to calculate
-        n_jobs=12,
+        n_jobs=24,
     )
     stop_time = datetime.datetime.now()
     print("duration:", stop_time - start_time)
 
     assert len(study.best_trial.intermediate_values) == data.shape[0] * inner_folds
+    return study.best_value, study.best_params
 
 
 if __name__ == "__main__":

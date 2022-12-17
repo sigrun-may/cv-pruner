@@ -24,7 +24,7 @@ def colon_experiment():
         study_name = f"colon_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            benchmark_combined_pruner.main(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name, threshold=0.37),
         )
         stop_time = datetime.datetime.now()
         print("duration colon:", stop_time - start_time)
@@ -44,10 +44,10 @@ def prostate_experiment():
         study_name = f"prostate_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            benchmark_combined_pruner.main(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name, threshold=0.35),
         )
         stop_time = datetime.datetime.now()
-        print("duration colon:", stop_time - start_time)
+        print("duration prostate:", stop_time - start_time)
 
 
 def leukemia_experiment():
@@ -64,10 +64,10 @@ def leukemia_experiment():
         study_name = f"leukemia_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
-            benchmark_combined_pruner.main(data, label, study_name),
+            benchmark_combined_pruner.main(data, label, study_name, threshold=0.2),
         )
         stop_time = datetime.datetime.now()
-        print("duration colon:", stop_time - start_time)
+        print("duration leukemia:", stop_time - start_time)
 
 
 def main():
