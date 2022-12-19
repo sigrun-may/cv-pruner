@@ -9,7 +9,7 @@ from functools import partial
 import lightgbm as lgb
 import numpy as np
 import optuna
-from optuna.pruners import PercentilePruner
+from optuna.pruners import SuccessiveHalvingPruner
 from scipy.stats import trim_mean
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 
@@ -27,12 +27,14 @@ from cv_pruner.optuna_pruner import (
 inner_folds: int = 10
 
 
-def combined_cv_pruner_factory(inner_cv_folds, threshold, extrapolation_method, comparison_based_pruner, base_pruner):
+def combined_cv_pruner_factory(inner_cv_folds, threshold, n_warmup_steps_threshold_pruner, extrapolation_method,
+                               comparison_based_pruner, base_pruner):
     no_model_build_pruner = NoModelBuildPruner()
     no_model_build_pruner_benchmark = BenchmarkPruneFunctionWrapper(no_model_build_pruner)
 
     threshold_pruner = RepeatedTrainingThresholdPruner(
         threshold=threshold,
+        n_warmup_steps=n_warmup_steps_threshold_pruner,
         extrapolation_interval=inner_cv_folds,
         extrapolation_method=extrapolation_method,
     )
@@ -139,39 +141,38 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
 
 
 def main(data, label, study_name, threshold):
-    pruner, no_model_build_pruner = combined_cv_pruner_factory(
-        inner_cv_folds=inner_folds,
-        threshold=threshold,
-        comparison_based_pruner=PercentilePruner(
-            percentile=25,
-            n_startup_trials=1,
-            n_warmup_steps=0,
-        ),
-        base_pruner=PercentilePruner(
-            percentile=25,
-            n_warmup_steps=int((data.shape[0] * inner_folds) / 2),  # half of all steps
-        ),
-        extrapolation_method=Method.OPTIMAL_METRIC,
-    )
     # pruner, no_model_build_pruner = combined_cv_pruner_factory(
     #     inner_cv_folds=inner_folds,
-    #     threshold=0.25,
-    #     comparison_based_pruner=SuccessiveHalvingPruner(
-    #         min_resource="auto",
-    #         reduction_factor=3,
-    #         min_early_stopping_rate=2,
-    #         bootstrap_count=0,
+    #     threshold=threshold,
+    #     comparison_based_pruner=PercentilePruner(
+    #         percentile=25,
     #     ),
-    #     base_pruner=SuccessiveHalvingPruner(
-    #         min_resource="auto",
-    #         reduction_factor=3,
-    #         min_early_stopping_rate=2,
-    #         bootstrap_count=0,
+    #     base_pruner=PercentilePruner(
+    #         percentile=25,
+    #         n_warmup_steps=int((data.shape[0] * inner_folds) / 2),  # half of all steps
     #     ),
     #     extrapolation_method=Method.OPTIMAL_METRIC,
     # )
+    pruner, no_model_build_pruner = combined_cv_pruner_factory(
+        inner_cv_folds=inner_folds,
+        threshold=threshold,
+        n_warmup_steps_threshold_pruner=4,
+        extrapolation_method=Method.OPTIMAL_METRIC,
+        comparison_based_pruner=SuccessiveHalvingPruner(
+            min_resource="auto",
+            reduction_factor=5,
+            min_early_stopping_rate=2,
+            bootstrap_count=0,
+        ),
+        base_pruner=SuccessiveHalvingPruner(
+            min_resource="auto",
+            reduction_factor=3,
+            min_early_stopping_rate=2,
+            bootstrap_count=0,
+        ),
+    )
     study = optuna.create_study(
-        storage="sqlite:///optuna_pruner_experiment.db",
+        storage="sqlite:///optuna_pruner_experiment2.db",
         study_name=study_name,
         direction="minimize",
         pruner=pruner,
@@ -186,7 +187,7 @@ def main(data, label, study_name, threshold):
     study.optimize(
         optuna_objective_partial,
         n_trials=40,  # number of trials to calculate
-        n_jobs=24,
+        n_jobs=12,
     )
     stop_time = datetime.datetime.now()
     print("duration:", stop_time - start_time)
@@ -200,4 +201,4 @@ if __name__ == "__main__":
     from data_loader.data_loader import load_colon_data
 
     data_df, label_df = load_colon_data()
-    main(data_df, label_df, "study_name")
+    main(data_df, label_df, "study_name", threshold=0.5)
