@@ -59,7 +59,9 @@ def combined_cv_pruner_factory(inner_cv_folds, threshold, n_warmup_steps_thresho
     )  # no not switch order with RepeatedTrainingPrunerWrapper!
 
     compound_pruner = MultiPrunerDelegate(
-        pruner_list=[no_model_build_pruner_benchmark, threshold_pruner, comparison_based_pruner, base_pruner],
+        # pruner_list=[comparison_based_pruner],
+        pruner_list=[no_model_build_pruner_benchmark, threshold_pruner, comparison_based_pruner],
+        # pruner_list=[no_model_build_pruner_benchmark, threshold_pruner, comparison_based_pruner, base_pruner],
         prune_eager=False,
     )
 
@@ -133,6 +135,7 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
             no_model_build_pruner.communicate_feature_values(selected_features)
             if trial.should_prune():
                 # raise TrialPruned
+                print('pruned')
                 # return np.mean(validation_metric_history)
                 return trim_mean(validation_metric_history, proportiontocut=0.2)
 
@@ -160,8 +163,8 @@ def main(data, label, study_name, threshold):
         extrapolation_method=Method.OPTIMAL_METRIC,
         comparison_based_pruner=SuccessiveHalvingPruner(
             min_resource="auto",
-            reduction_factor=5,
-            min_early_stopping_rate=2,
+            reduction_factor=4,
+            min_early_stopping_rate=1,
             bootstrap_count=0,
         ),
         base_pruner=SuccessiveHalvingPruner(
@@ -172,7 +175,7 @@ def main(data, label, study_name, threshold):
         ),
     )
     study = optuna.create_study(
-        storage="sqlite:///optuna_pruner_experiment2.db",
+        storage="sqlite:///optuna_pruner_reduction4.db",
         study_name=study_name,
         direction="minimize",
         pruner=pruner,

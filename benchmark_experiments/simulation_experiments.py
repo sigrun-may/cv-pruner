@@ -22,9 +22,9 @@ def colon_experiment():
     #     if "prostate_cv_pruner" in summary.study_name:
     #         optuna.study.delete_study(summary.study_name, storage="sqlite:///optuna_paper_db.db")
 
-    for i in range(2):
+    for i in range(30):
         start_time = datetime.datetime.now()
-        study_name = f"colon_cv_pruner_warmup4_asha_55{i}"
+        study_name = f"colon_cv_pruner{i}"
         print(
             "best value for metric, parameters",
             # benchmark_combined_pruner.main(data, label, study_name, threshold=0.37),
@@ -37,13 +37,13 @@ def colon_experiment():
 def prostate_experiment():
     data, label = data_loader.standardize_sample_size(*data_loader.load_prostate_data())
 
-    for i in range(2):
+    for i in range(30):
         start_time = datetime.datetime.now()
         study_name = f"prostate_cv_pruner_{i}"
         print(
             "best value for metric, parameters",
             # benchmark_combined_pruner.main(data, label, study_name, threshold=0.35),
-            benchmark_combined_pruner.main(data, label, study_name, threshold=0.5),
+            benchmark_combined_pruner.main(data, label, study_name, threshold=0.55),
         )
         stop_time = datetime.datetime.now()
         print("duration prostate:", stop_time - start_time)
@@ -52,7 +52,7 @@ def prostate_experiment():
 def leukemia_experiment():
     data, label = data_loader.standardize_sample_size(*data_loader.load_leukemia_data())
 
-    for i in range(2):
+    for i in range(30):
         start_time = datetime.datetime.now()
         study_name = f"leukemia_cv_pruner_{i}"
         print(
