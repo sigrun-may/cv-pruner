@@ -70,7 +70,7 @@ def load_colon_data() -> Tuple[pd.DataFrame, pd.Series]:
         data_df.columns = column_names
 
         # cache data
-        joblib.dump((data_df, label), cache_data_file, compress=("gzip", 3))
+        # joblib.dump((data_df, label), cache_data_file, compress=("gzip", 3))
 
     return data_df, pd.Series(label)
 
@@ -104,7 +104,7 @@ def load_prostate_data() -> Tuple[pd.DataFrame, pd.Series]:
         assert data.shape == (102, 6033)
 
         # cache data
-        joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
+        # joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
 
     return data, pd.Series(labels)
 
@@ -139,7 +139,7 @@ def load_leukemia_data() -> Tuple[pd.DataFrame, pd.Series]:
         assert data.shape == (72, 7128)
 
         # cache data
-        joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
+        # joblib.dump((data, labels), cache_data_file, compress=("gzip", 3))
 
     return data, pd.Series(labels)
 

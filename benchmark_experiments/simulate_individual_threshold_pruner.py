@@ -6,19 +6,22 @@
 """TODO: add docstring."""
 
 import math
+import sys
 from statistics import mean, median
 
 import numpy as np
 import optuna
+import settings
 from optuna.trial import TrialState
 from scipy.stats import trim_mean
 
 import cv_pruner
-import settings
 
-RESTRICTED_NUMBER_OF_CONSIDERED_TRIALS = 40
-RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES = 30
-DB = "sqlite:///optuna_paper_db_node4.db"
+
+RESTRICTED_NUMBER_OF_CONSIDERED_TRIALS = settings.trials_per_study
+# RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES = settings.studies_per_experiment
+RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES = None
+DB = settings.db_path
 
 STANDARD_PRUNED = "optuna_pruned"
 
@@ -27,28 +30,40 @@ def evaluate_falsely_pruned_trials_threshold(trial, threshold, result, step_prun
     """TODO: add docstring."""
     falsely_pruned = False
     raw_evaluation_metric_list = trial.user_attrs["raw_evaluation_metric_list"]
-    if mean(raw_evaluation_metric_list) < threshold:
+    if mean(raw_evaluation_metric_list) <= threshold:
         result["mean_pruned_below_threshold_list"].append(mean(raw_evaluation_metric_list))
         falsely_pruned = True
-    if median(raw_evaluation_metric_list) < threshold:
+    if median(raw_evaluation_metric_list) <= threshold:
         result["median_pruned_below_threshold_list"].append(median(raw_evaluation_metric_list))
         falsely_pruned = True
-    # Was the globally best trial pruned, if it was below the threshold?
-    # if trim_mean(raw_evaluation_metric_list, 0.2) < threshold:
-    if np.median(raw_evaluation_metric_list) < threshold:
-        result["trimmed_mean_pruned_below_threshold_list"].append(trim_mean(raw_evaluation_metric_list, 0.2))
+        # print("##############################################################")
+        # print("trial", trial.value)
+        # print("study", result["study_best_value"])
+        # print("threshold", threshold)
+    if median(raw_evaluation_metric_list) <= result["study_best_value"]:
+        three_layer_pruner_fails_list = result["three_layer_pruner_fails_list"]
+        three_layer_pruner_fails_list.append(median(raw_evaluation_metric_list))
+        result["three_layer_pruner_fails_list"] = three_layer_pruner_fails_list
+        # result["three_layer_pruner_fails_list"].append(median(raw_evaluation_metric_list))
+        print('result["three_layer_pruner_fails_list"]', result["three_layer_pruner_fails_list"])
+        print('result["study_best_value"]', result["study_best_value"])
         print("##############################################################")
-        print("trial", trial.value)
-        print("study", result["study_best_value"])
-        print("threshold", threshold)
-        if trial.value <= result["study_best_value"]:
-            result["three_layer_pruner_fails_list"].append(trial.value)
-            print('result["three_layer_pruner_fails_list"]', result["three_layer_pruner_fails_list"])
-            print("##############################################################")
+        falsely_pruned = True
+    # Was the globally best trial pruned, if it was below the threshold?
+    if trim_mean(raw_evaluation_metric_list, 0.2) <= threshold:
+        result["trimmed_mean_pruned_below_threshold_list"].append(trim_mean(raw_evaluation_metric_list, 0.2))
+        # print("##############################################################")
+        # print("trial", trial.value)
+        # print("study", result["study_best_value"])
+        # print("threshold", threshold)
+        # if trial.value <= result["study_best_value"]:
+        #     result["three_layer_pruner_fails_list"].append(trial.value)
+        #     print('result["three_layer_pruner_fails_list"]', result["three_layer_pruner_fails_list"])
+        #     print("##############################################################")
         falsely_pruned = True
     if falsely_pruned:
         result["step_false_pruning_list"].append(step_pruned)
-        print("false:")
+        # print("false:")
     # pprint(result)
 
 
@@ -61,11 +76,11 @@ def evaluate_standard_pruner_fails(current_trial, result):
 
 def evaluate_additional_pruning(result, step_pruned_fi, step_pruned_threshold, trial, threshold):
     result["steps_three_layer_pruner"] += min(step_pruned_fi, step_pruned_threshold)
-    if step_pruned_fi < step_pruned_threshold:
-        result["number_of_trials_pruned_fi"] += 1
-    else:
+    if step_pruned_fi > step_pruned_threshold:
         result["number_of_trials_pruned_threshold"] += 1
         evaluate_falsely_pruned_trials_threshold(trial, threshold, result, step_pruned_threshold)
+    else:
+        result["number_of_trials_pruned_fi"] += 1
 
 
 def evaluate_trial(trial, threshold, method, result):
@@ -130,12 +145,14 @@ def simulate_threshold_pruner(trial, threshold, method):
         # change counting steps to one based
         current_cross_validation_step += 1
         if cv_pruner.should_prune_against_threshold(
-                settings.folds_inner_cv,
-                raw_evaluation_metric_list[:current_cross_validation_step],
-                threshold,
-                direction_to_optimize_is_minimize=settings.direction_to_optimize_is_minimize,
-                method=method,
-                optimal_metric_value=settings.optimal_metric,
+            settings.folds_inner_cv,
+            raw_evaluation_metric_list[:current_cross_validation_step],
+            threshold,
+            start_step=0,
+            stop_step=sys.maxsize,
+            direction_to_optimize_is_minimize=settings.direction_to_optimize_is_minimize,
+            method=method,
+            optimal_metric_value=settings.optimal_metric,
         ):
             return current_cross_validation_step
 
@@ -176,17 +193,23 @@ def analyze_study(study_name, method, threshold):
     else:
         trials = study.get_trials()[:RESTRICTED_NUMBER_OF_CONSIDERED_TRIALS]
 
-    # initialize
+    # # initialize
     for trial in trials:
         if trial.state == TrialState.COMPLETE:
+            # TODO adapt to min max
             if result["study_best_value"] is None:
-                result["study_best_value"] = trial.value
-
+                result["study_best_value"] = math.inf
                 # corrected 0 based _trial.last_step to 1 based
                 # initialize number of steps for one complete trial
                 result["steps_per_trial"] = (trial.last_step + 1) * settings.folds_inner_cv
-            # TODO adapt to min max
-            result["study_best_value"] = min(trial.value, result["study_best_value"])
+
+            best_value_of_trial = np.median(trial.user_attrs["raw_evaluation_metric_list"])
+            result["study_best_value"] = min(best_value_of_trial, result["study_best_value"])
+            # result["study_best_value"] = trial.value
+            # result["study_best_value"] = min(trial.value, result["study_best_value"])
+
+    # fig = optuna.visualization.plot_intermediate_values(study)
+    # fig.show()
 
     # collect pruner data
     for trial in trials:
@@ -215,14 +238,14 @@ def analyze_study(study_name, method, threshold):
     #     + "_intermediate_values_plot.png"
     # )
     assert (
-            result["number_of_trials_pruned_by_asha_only"] + result["number_of_pruned_trials_later_pruned_by_asha"]
-            == result["number_of_trials_pruned_by_asha"]
+        result["number_of_trials_pruned_by_asha_only"] + result["number_of_pruned_trials_later_pruned_by_asha"]
+        == result["number_of_trials_pruned_by_asha"]
     )
     assert (
-            40 - result["number_of_unpruned_trials"]
-            == result["number_of_trials_pruned_fi"]
-            + result["number_of_trials_pruned_threshold"]
-            + result["number_of_trials_pruned_by_asha_only"]
+        settings.trials_per_study - result["number_of_unpruned_trials"]
+        == result["number_of_trials_pruned_fi"]
+        + result["number_of_trials_pruned_threshold"]
+        + result["number_of_trials_pruned_by_asha_only"]
     )
     return result
 
@@ -240,11 +263,12 @@ def get_results(method, experiment_name, threshold):
         # print("trials:", summary.n_trials)
 
         if experiment_name in summary.study_name and (
-                RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES is None
-                or len(list_of_study_results) < RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES
+            RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES is None
+            or len(list_of_study_results) < RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES
         ):
             list_of_study_results.append(analyze_study(summary.study_name, method, threshold))
 
     return list_of_study_results
+
 
 # print(get_results(cv_pruner.Method.MEAN_DEVIATION_TO_MEDIAN, "colon_cv_pruner0", 0.5))

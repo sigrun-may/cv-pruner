@@ -10,7 +10,7 @@ import lightgbm as lgb
 import numpy as np
 import optuna
 import pandas as pd
-from optuna.pruners import SuccessiveHalvingPruner
+from optuna.pruners import PercentilePruner, SuccessiveHalvingPruner
 from scipy.stats import trim_mean
 from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 
@@ -22,65 +22,58 @@ from cv_pruner.optuna_pruner import (
     RepeatedTrainingPrunerWrapper,
     RepeatedTrainingThresholdPruner,
 )
-from hpoflow import SignificanceRepeatedTrainingPruner
+from data_loader.data_loader import load_colon_data
+
 
 """Accelerating embedded feature selection with combined pruning."""
 
+# Parse the data
+# df = pd.read_csv("/home/sigrun/PycharmProjects/reverse_feature_selection/data/small_50.csv")
+# label = df["label"]
+# data = df.iloc[:, 1:]
+data, label = load_colon_data()
+# data = data1.iloc[:, :40]
 inner_folds: int = 10
 
 
-def combined_cv_pruner_factory(inner_cv_folds, threshold, n_warmup_steps_threshold_pruner, extrapolation_method,
-                               comparison_based_pruner, base_pruner):
+def combined_cv_pruner_factory(inner_cv_folds, threshold, extrapolation_method, comparison_based_pruner, base_pruner):
     no_model_build_pruner = NoModelBuildPruner()
     no_model_build_pruner_benchmark = BenchmarkPruneFunctionWrapper(no_model_build_pruner)
 
     threshold_pruner = RepeatedTrainingThresholdPruner(
         threshold=threshold,
-        n_warmup_steps=n_warmup_steps_threshold_pruner,
         extrapolation_interval=inner_cv_folds,
         extrapolation_method=extrapolation_method,
     )
     threshold_pruner = BenchmarkPruneFunctionWrapper(threshold_pruner)
 
     comparison_based_pruner = RepeatedTrainingPrunerWrapper(
-        pruner=comparison_based_pruner,
-        inner_cv_folds=inner_cv_folds,
-        aggregate_function=partial(trim_mean, proportiontocut=0.2),
+        pruner=comparison_based_pruner, inner_cv_folds=inner_cv_folds
     )  # no not switch order with BenchmarkPruneFunctionWrapper!
     comparison_based_pruner = BenchmarkPruneFunctionWrapper(
         comparison_based_pruner, pruner_name="comparison"
     )  # no not switch order with RepeatedTrainingPrunerWrapper!
 
     base_pruner = RepeatedTrainingPrunerWrapper(
-        pruner=base_pruner,
-        inner_cv_folds=1,
-        aggregate_function=np.mean,
+        pruner=base_pruner, inner_cv_folds=1
     )  # no not switch order with BenchmarkPruneFunctionWrapper!
     base_pruner = BenchmarkPruneFunctionWrapper(
-        base_pruner, pruner_name="baseline"
-    )  # no not switch order with RepeatedTrainingPrunerWrapper!
-
-    hpo_flow_pruner = SignificanceRepeatedTrainingPruner(
-        alpha=0.4,
-        n_warmup_steps=4,
-    )  # no not switch order with BenchmarkPruneFunctionWrapper!
-    hpo_flow_pruner = BenchmarkPruneFunctionWrapper(
-        hpo_flow_pruner, pruner_name="hpo_flow_pruner"
+        base_pruner, pruner_name="comparison_baseline"
     )  # no not switch order with RepeatedTrainingPrunerWrapper!
 
     compound_pruner = MultiPrunerDelegate(
-        pruner_list=[hpo_flow_pruner],
-        # pruner_list=[comparison_based_pruner],
-        # pruner_list=[no_model_build_pruner_benchmark, threshold_pruner, comparison_based_pruner],
+        # pruner_list=[no_model_build_pruner_benchmark, threshold_pruner, comparison_based_pruner], prune_eager=False
+        pruner_list=[comparison_based_pruner],
         prune_eager=False,
     )
 
     return compound_pruner, no_model_build_pruner
 
 
-def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPruner):
+def _optuna_objective(trial):
     current_step_of_complete_nested_cross_validation = 0
     validation_metric_history = []
+    fi_pruned = False
 
     # outer cross-validation
     loo = LeaveOneOut()
@@ -99,6 +92,7 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
         for train_index, validation_index in k_fold_cv.split(x_remain, y_remain):
             # count steps starting with 1
             current_step_of_complete_nested_cross_validation += 1
+            # print('step: ', current_step_of_complete_nested_cross_validation, 'trial:', trial.number)
 
             x_train = x_remain.iloc[train_index, :]
             x_validation = x_remain.iloc[validation_index, :]
@@ -116,9 +110,10 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
                 max_depth=trial.suggest_int("max_depth", 2, 20),
                 bagging_fraction=trial.suggest_float("bagging_fraction", 0.1, 1.0),
                 bagging_freq=trial.suggest_int("bagging_freq", 1, 10),
+                extra_trees=True,
                 objective="binary",
-                metric="binary_logloss",
-                # metric="l1",
+                # metric="binary_logloss",
+                metric="l1",
                 boosting_type="rf",
                 verbose=-1,
             )
@@ -137,81 +132,83 @@ def _optuna_objective(trial, data, label, no_model_build_pruner: NoModelBuildPru
                 valid_sets=[validation_data],
                 callbacks=[lgb.record_evaluation(eval_result)],
             )
-            best_score = model.best_score["valid_0"]["binary_logloss"]
+            best_score = model.best_score["valid_0"]["l1"]
+            # validation_metric_history.append(model.best_score["valid_0"]["binary_logloss"])
             validation_metric_history.append(best_score)
 
-            trial.report(best_score, current_step_of_complete_nested_cross_validation)
-            selected_features = model.feature_importance(importance_type="gain")
-            no_model_build_pruner.communicate_feature_values(selected_features)
-            if trial.should_prune():
-                # raise TrialPruned
-                print('pruned')
-                # return np.mean(validation_metric_history)
-                return trim_mean(validation_metric_history, proportiontocut=0.2)
+            trial.report(np.mean(validation_metric_history), current_step_of_complete_nested_cross_validation)
+        # trial.report(trim_mean(validation_metric_history, proportiontocut=0.2), count)
+        # selected_features = model.feature_importance(importance_type="gain")
+        # no_model_build_pruner.communicate_feature_values(selected_features)
+        # if trial.should_prune():
+        #     print("pruned")
+        #     # raise TrialPruned
+        #     # return np.mean(validation_metric_history)
+        #     return trim_mean(validation_metric_history, proportiontocut=0.2)
 
-    return trim_mean(validation_metric_history, proportiontocut=0.2)
-    # return np.mean(validation_metric_history)
+    # return trim_mean(validation_metric_history, proportiontocut=0.2)
+    trial.set_user_attr("raw_evaluation_metric_list", validation_metric_history)
+    return np.mean(validation_metric_history)
 
 
-def main(data: pd.DataFrame, label: pd.Series, study_name: str, threshold: float) -> tuple:
+def main():
+    pruner, no_model_build_pruner = combined_cv_pruner_factory(
+        inner_cv_folds=inner_folds,
+        threshold=0.36,
+        comparison_based_pruner=PercentilePruner(
+            percentile=25,
+            n_startup_trials=1,
+            n_warmup_steps=10,
+            n_min_trials=2,
+        ),
+        base_pruner=PercentilePruner(
+            percentile=25,
+            n_startup_trials=1,
+            n_warmup_steps=10,
+            n_min_trials=2,
+        ),
+        extrapolation_method=Method.OPTIMAL_METRIC,
+    )
     # pruner, no_model_build_pruner = combined_cv_pruner_factory(
     #     inner_cv_folds=inner_folds,
-    #     threshold=threshold,
-    #     comparison_based_pruner=PercentilePruner(
-    #         percentile=25,
+    #     threshold=0.25,
+    #     comparison_based_pruner=SuccessiveHalvingPruner(
+    #         min_resource="auto",
+    #         reduction_factor=3,
+    #         min_early_stopping_rate=2,
+    #         bootstrap_count=0,
     #     ),
-    #     base_pruner=PercentilePruner(
-    #         percentile=25,
-    #         n_warmup_steps=int((data.shape[0] * inner_folds) / 2),  # half of all steps
+    #     base_pruner=SuccessiveHalvingPruner(
+    #         min_resource="auto",
+    #         reduction_factor=3,
+    #         min_early_stopping_rate=2,
+    #         bootstrap_count=0,
     #     ),
     #     extrapolation_method=Method.OPTIMAL_METRIC,
     # )
-    pruner, no_model_build_pruner = combined_cv_pruner_factory(
-        inner_cv_folds=inner_folds,
-        threshold=threshold,
-        n_warmup_steps_threshold_pruner=4,
-        extrapolation_method=Method.OPTIMAL_METRIC,
-        comparison_based_pruner=SuccessiveHalvingPruner(
-            min_resource="auto",
-            reduction_factor=4,
-            min_early_stopping_rate=1,
-            bootstrap_count=0,
-        ),
-        base_pruner=SuccessiveHalvingPruner(
-            min_resource="auto",
-            reduction_factor=3,
-            min_early_stopping_rate=2,
-            bootstrap_count=0,
-        ),
-    )
+    # optuna.study.delete_study("optuna_study_colon_mean_cumulated_reported", "sqlite:///optuna_pruner_vis.db")
     study = optuna.create_study(
-        storage="sqlite:///hpo_flow_pruner.db",
-        study_name=study_name,
+        storage="sqlite:///optuna_pruner_vis.db",
+        study_name="optuna_study_colon_mean_cumulated_reported",
         direction="minimize",
-        pruner=pruner,
+        # pruner=pruner,
         load_if_exists=True,
     )
-    study.set_user_attr('threshold', threshold)
-
-    optuna_objective_partial = partial(_optuna_objective, data=data, label=label,
-                                       no_model_build_pruner=no_model_build_pruner)
 
     start_time = datetime.datetime.now()
     study.optimize(
-        optuna_objective_partial,
+        _optuna_objective,
         n_trials=40,  # number of trials to calculate
-        n_jobs=4,
+        n_jobs=8,
     )
     stop_time = datetime.datetime.now()
     print("duration:", stop_time - start_time)
 
+    fig = optuna.visualization.plot_intermediate_values(study)
+    fig.show()
+
     assert len(study.best_trial.intermediate_values) == data.shape[0] * inner_folds
-    return study.best_value, study.best_params
 
 
 if __name__ == "__main__":
-    # Parse the data
-    from data_loader.data_loader import load_colon_data
-
-    data_df, label_df = load_colon_data()
-    main(data_df, label_df, "study_name", threshold=0.5)
+    main()

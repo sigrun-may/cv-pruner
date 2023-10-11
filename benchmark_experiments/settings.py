@@ -52,3 +52,10 @@ intermediate_value = "median"
 # define logging level
 ##########################
 logging_level = "DEBUG"
+
+##########################
+# Settings to analyze experiments
+##########################
+db_path = "sqlite:///optuna_paper_db_12jobs.db"
+trials_per_study = 60
+studies_per_experiment = 30

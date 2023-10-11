@@ -30,9 +30,7 @@ extras_require = {
 }
 
 # add "all"
-all_extra_packages = list(
-    {package_name for value in extras_require.values() for package_name in value}
-)
+all_extra_packages = list({package_name for value in extras_require.values() for package_name in value})
 extras_require["all"] = all_extra_packages
 
 
@@ -68,7 +66,7 @@ setuptools.setup(
         "Code of Conduct": source_code + "/blob/main/CODE_OF_CONDUCT.md",  # TODO: add this file
     },
     packages=setuptools.find_packages(),
-    python_requires=">=3.6",
+    python_requires=">=3.11",
     install_requires=install_requires,
     extras_require=extras_require,
     keywords=keywords,
@@ -80,10 +78,6 @@ setuptools.setup(
         "Intended Audience :: Education",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Scientific/Engineering",

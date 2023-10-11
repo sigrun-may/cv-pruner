@@ -7,10 +7,10 @@ import numpy as np
 import optuna
 import pandas as pd
 import seaborn as sns
+import settings
 from matplotlib import pyplot
 from scipy.stats import trim_mean
 
-import settings
 
 DB = "sqlite:///optuna_paper_db_node4.db"
 k_folds = settings.folds_inner_cv
@@ -47,7 +47,7 @@ for summary in summaries:
             evaluation_metric_df["trim_mean logloss"] = trim_mean_raw_value
             evaluation_metric_df["median logloss"] = median_raw_value
             evaluation_metric_df["step of nested cross-validation"] = (
-                    np.array(range(len(trial.user_attrs["raw_evaluation_metric_list"]))) + 1
+                np.array(range(len(trial.user_attrs["raw_evaluation_metric_list"]))) + 1
             )
 
             raw_evaluation_metric_list = trial.user_attrs["raw_evaluation_metric_list"]
@@ -62,7 +62,7 @@ for summary in summaries:
                     median_list.append(median(raw_evaluation_metric_list[:i]))
                     mean_list.append(mean(raw_evaluation_metric_list[:i]))
                     reduced_variance_list.append(trim_mean(raw_evaluation_metric_list[:i], 0.2))
-                    reduced_variance_list2.append(mean(raw_evaluation_metric_list[i - k_folds: i]))
+                    reduced_variance_list2.append(mean(raw_evaluation_metric_list[i - k_folds : i]))
                     # reduced_variance_list2.append(
                     #     trim_mean(raw_evaluation_metric_list[i-k_folds: i], 0.2)
                     # )
@@ -88,9 +88,8 @@ for summary in summaries:
             cumulated_evaluation_metric_df["cummulated median logloss"] = median_list
             cumulated_evaluation_metric_df["cummulated mean logloss"] = mean_list
             cumulated_evaluation_metric_df["outer folds of nested cross-validation"] = (
-                                                                                               (np.asarray(range(
-                                                                                                   len(reduced_variance_list)))) + 1
-                                                                                       ) * k_folds
+                (np.asarray(range(len(reduced_variance_list)))) + 1
+            ) * k_folds  # TODO check valid length
             assert len(reduced_variance_list) == len(
                 cumulated_evaluation_metric_df["outer folds of nested cross-validation"]
             )

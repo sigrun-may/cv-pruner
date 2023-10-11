@@ -18,6 +18,7 @@ from scipy.stats import trim_mean
 import cv_pruner
 from cv_pruner import Method, should_prune_against_threshold
 
+
 _logger = logging.getLogger(__name__)
 
 
@@ -55,11 +56,12 @@ class NoModelBuildPruner(BasePruner):
         self.feature_values = feature_values
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
-        if self.feature_values is None:
-            raise RuntimeError("'feature_values' is not set! Did you forget to call 'communicate_feature_values'?")
-
-        if isinstance(self.feature_values, list):
-            self.feature_values = np.array(self.feature_values)
+        # if self.feature_values is None:
+        #     raise RuntimeError("'feature_values' is not set! Did you forget to call 'communicate_feature_values'?")
+        #
+        # if isinstance(self.feature_values, list):
+        #     self.feature_values = np.array(self.feature_values)
+        self.feature_values = np.array(trial.user_attrs["selected_features"])
 
         return np.sum(self.feature_values != 0) == 0
 
@@ -75,7 +77,6 @@ class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPru
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
         prune_result = self.pruner.prune(study, trial)
         if prune_result and trial.number not in self.pruned_trial_numbers:
-            _logger.info(f"BenchmarkPruneFunctionWrapper for {self.pruner_name} pruned.")
             pruning_timestamp = datetime.datetime.now().isoformat(timespec="microseconds")  # like Optuna
             intermediate_values = trial.intermediate_values.values()
             step = len(intermediate_values)
@@ -83,16 +84,16 @@ class BenchmarkPruneFunctionWrapper(BasePruner):  # TODO: rename to BenchmarkPru
                 trial._trial_id, f"{self.pruner_name}_pruned_at", {"step": step, "timestamp": pruning_timestamp}
             )
             self.pruned_trial_numbers.add(trial.number)
-            _logger.debug(self.pruner_name, step)
+            _logger.info(f"BenchmarkPruneFunctionWrapper for {self.pruner_name} pruned at {step}.")
         return False
 
 
 class RepeatedTrainingPrunerWrapper(BasePruner):
     def __init__(
-            self,
-            pruner: BasePruner,
-            aggregate_function: Optional[Callable[[List[float]], float]] = None,
-            inner_cv_folds: int = 1,
+        self,
+        pruner: BasePruner,
+        aggregate_function: Optional[Callable[[List[float]], float]] = None,
+        inner_cv_folds: int = 1,
     ):
         self.pruner = pruner
         if aggregate_function is None:
@@ -102,8 +103,7 @@ class RepeatedTrainingPrunerWrapper(BasePruner):
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
         # no values have been reported
-        step = trial.last_step
-        if step is None:
+        if trial.last_step is None:
             return False
 
         prune_result = False
@@ -132,6 +132,13 @@ class RepeatedTrainingPrunerWrapper(BasePruner):
                     aggregated_intermediate_values[aggregation_step] = aggregated_value
             trial_clone.intermediate_values = aggregated_intermediate_values
             prune_result = self.pruner.prune(study, trial_clone)
+
+#            # FIXME: this is for debug only
+#            if self.inner_cv_folds > 1:
+#                assert trial.last_step > 0
+#                print(f"### {trial.number} c-pruner! result: {prune_result}, aggregated_intermediate_values: {aggregated_intermediate_values}")
+        if prune_result:
+            print(prune_result)
         return prune_result
 
 
@@ -144,10 +151,8 @@ class RepeatedTrainingThresholdPruner(BasePruner):
 
     Args:
         threshold:
-            A minimum value which determines whether pruner prunes or not.
-            If an extrapolated value is smaller than lower, it prunes.
-            Or a maximum value which determines whether pruner prunes or not.
-            If an extrapolated value is larger than upper, it prunes.
+            Threshold for the validation metric that should not be exceeded
+            (minimizing) or fallen below (maximizing).
         n_warmup_steps:
             Pruning is disabled if the number of reported steps is less than the given number of warmup steps.
         active_until_step:
@@ -157,15 +162,22 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             Cross-validation folds or folds of inner cross-validation in case of nested cross-validation.
             If no value has been reported at the time of a pruning check, that particular check
             will be postponed until a value is reported. Value must be at least 1.
+        extrapolation_method:
+            The extrapolation method to be used (see cv_pruner Method). Default is ``Metric.OPTIMAL_METRIC``.
+        optimal_metric_value:
+            Optimal value for the performance evaluation metric.
+            Must be set if extrapolation method is ``Metric.OPTIMAL_METRIC``.
+
     """
 
     def __init__(
-            self,
-            threshold: float,
-            n_warmup_steps: int = 0,
-            active_until_step: int = sys.maxsize,
-            extrapolation_interval: int = 1,
-            extrapolation_method: cv_pruner.Method = Method.OPTIMAL_METRIC,
+        self,
+        threshold: float,
+        n_warmup_steps: int = 4,
+        active_until_step: int = sys.maxsize,
+        extrapolation_interval: int = 1,
+        extrapolation_method: cv_pruner.Method = Method.OPTIMAL_METRIC,
+        optimal_metric_value: int = 0,
     ) -> None:
 
         threshold = _check_value(threshold)
@@ -182,6 +194,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
         self._active_until_step = active_until_step
         self._cross_validation_folds = extrapolation_interval
         self._extrapolation_method = extrapolation_method
+        self._optimal_metric_value = optimal_metric_value
 
     def prune(self, study: optuna.study.Study, trial: optuna.trial.FrozenTrial) -> bool:
 
@@ -205,7 +218,7 @@ class RepeatedTrainingThresholdPruner(BasePruner):
             stop_step=sys.maxsize,  # set max value here to let the pruner decide before
             direction_to_optimize_is_minimize=study.direction == StudyDirection.MINIMIZE,
             method=self._extrapolation_method,
-            optimal_metric_value=0,
+            optimal_metric_value=self._optimal_metric_value,
         )
 
 

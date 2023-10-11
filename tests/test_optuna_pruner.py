@@ -234,7 +234,7 @@ def test_RepeatedTrainingThresholdPruner_no_prune_if_after_active_until_step(sho
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
 def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_low_value(
-        should_prune_against_threshold_mock,
+    should_prune_against_threshold_mock,
 ):
     should_prune_against_threshold_mock.return_value = True
 
@@ -263,7 +263,7 @@ def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_activ
 
 @patch("cv_pruner.optuna_pruner.should_prune_against_threshold")
 def test_RepeatedTrainingThresholdPruner_active_between_n_warmup_steps_and_active_until_step_high_value(
-        should_prune_against_threshold_mock,
+    should_prune_against_threshold_mock,
 ):
     should_prune_against_threshold_mock.return_value = True
 

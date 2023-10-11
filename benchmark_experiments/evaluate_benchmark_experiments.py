@@ -1,6 +1,7 @@
 import optuna
 
-DB = "sqlite:///optuna_pruner_benchmark_test.db"
+
+DB = "sqlite:///optuna_pruner_vis.db"
 
 
 def get_results(method, experiment_name, threshold):
@@ -30,12 +31,16 @@ def get_results(method, experiment_name, threshold):
 
         # # initialize
         trials = study.get_trials()
+        count = 0
         for trial in trials:
             if trial.user_attrs:
+                count += 1
+                print("trial", trial.number)
                 for attr in trial.user_attrs:
                     print(attr)
                     print(trial.user_attrs[attr])
-                    print("##########################")
+                print("##########################")
+        print("pruned trials: ", count)
 
     #     if experiment_name in summary.study_name and (
     #         RESTRICTED_NUMBER_OF_CONSIDERED_STUDIES is None

@@ -16,6 +16,7 @@ import lightgbm as lgb
 import numpy as np
 import optuna
 import pandas as pd
+import settings
 from optuna import TrialPruned
 from optuna.pruners import SuccessiveHalvingPruner
 from optuna.samplers import TPESampler
@@ -24,14 +25,14 @@ from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 from tqdm import tqdm
 
 import cv_pruner
-import settings
+
 
 warnings.filterwarnings("ignore")
 logging.basicConfig(format="%(levelname)s:%(message)s")
 logger = logging.getLogger("my_logger")
 logger.setLevel(settings.logging_level)
 
-DB = "sqlite:///optuna_paper_db.db"
+DB = settings.db_path
 
 
 def simulate_no_features_selected_pruning(trial, model, current_step_complete_ncv, start_time):
@@ -71,7 +72,7 @@ def simulate_standard_pruning(trial, step, evaluation_metric_list, start_time):
 # Simulate pruning of embedded feature selection
 #####################################################################
 def simulate_hpo_pruning(
-        params: Dict, label: pd.Series, unlabeled_data: pd.DataFrame, trial: optuna.Trial
+    params: Dict, label: pd.Series, unlabeled_data: pd.DataFrame, trial: optuna.Trial
 ) -> float:  # pylint: disable=too-many-locals
     """TODO: add docstring: Was wird gemacht? Welche Parameter? Rückgabewert?."""
     # initialize variables
@@ -93,7 +94,7 @@ def simulate_hpo_pruning(
     # outer loop of the nested cross-validation
     loo = LeaveOneOut()
     for outer_sample_index, (remain_index, test_index) in enumerate(  # pylint: disable=unused-variable  # noqa: E501
-            loo.split(unlabeled_data)
+        loo.split(unlabeled_data)
     ):
         x_remain = unlabeled_data.iloc[remain_index, :]
         y_remain = label.iloc[remain_index]
@@ -241,10 +242,10 @@ def optimize(data, label, study_name):
         parameters["num_leaves"] = trial.suggest_int("num_leaves", 2, max_num_leaves)
 
         assert (2 ** parameters["max_depth"]) > parameters["num_leaves"], (
-                'Parameter failure -> parameters["max_depth"] > parameters["num_leaves"]:'
-                + str(parameters["max_depth"])
-                + ">"
-                + str(parameters["num_leaves"])
+            'Parameter failure -> parameters["max_depth"] > parameters["num_leaves"]:'
+            + str(parameters["max_depth"])
+            + ">"
+            + str(parameters["num_leaves"])
         )
         return simulate_hpo_pruning(parameters, label, data, trial)
 

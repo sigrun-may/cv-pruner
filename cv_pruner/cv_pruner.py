@@ -1,4 +1,3 @@
-# Copyright (c) 2021 Sigrun May, Helmholtz-Zentrum für Infektionsforschung GmbH (HZI)
 # Copyright (c) 2021 Sigrun May, Ostfalia Hochschule für angewandte Wissenschaften
 # This software is distributed under the terms of the MIT license
 # which is available at https://opensource.org/licenses/MIT
@@ -81,14 +80,14 @@ def _extrapolate_metric(validation_metric_history: List[float], method: Method) 
 
 
 def should_prune_against_threshold(
-        folds_inner_cv: int,
-        validation_metric_history: List[float],
-        threshold_for_pruning: float,
-        start_step: int = 4,
-        stop_step: int = 100,
-        direction_to_optimize_is_minimize: bool = True,
-        method: Method = Method.MEAN_DEVIATION_TO_MEDIAN,
-        optimal_metric_value: Optional[float] = None,
+    folds_inner_cv: int,
+    validation_metric_history: List[float],
+    threshold_for_pruning: float,
+    start_step: int = 4,
+    stop_step: int = 100,
+    direction_to_optimize_is_minimize: bool = True,
+    method: Method = Method.MEAN_DEVIATION_TO_MEDIAN,
+    optimal_metric_value: Optional[float] = None,
 ) -> bool:
     """Pruner to detect an invalid performance evaluation value of a trial.
 
@@ -98,7 +97,7 @@ def should_prune_against_threshold(
         validation_metric_history: List of all previously calculated performance evaluation metric values.
         threshold_for_pruning: Threshold that should not be exceeded
             (minimizing) or fallen below (maximizing).
-        start_step: Pruning starts after a patience of the specified ``start_step`` steps. Must be greater than 2.
+        start_step: Pruning starts after patience of the specified ``start_step`` steps.
             It is recommended to choose ``start_step`` greater than 3.
         stop_step: Pruning stops after the specified ``stop_step`` steps. Must be greater than ``start_step``.
         direction_to_optimize_is_minimize: True - in case of minimizing and False - in case of maximizing.
@@ -112,20 +111,19 @@ def should_prune_against_threshold(
         fall below the lower threshold respectively.
         FALSE otherwise.
     """
-    if not start_step > 2:
-        raise ValueError("start_step must be greater than 2!")
+
     if not stop_step > start_step:
         raise ValueError("stop_step must be greater than start_step!")
     if method == Method.OPTIMAL_METRIC and optimal_metric_value is None:
         raise ValueError("optimal_metric must be set if extrapolation method is Metric.OPTIMAL_METRIC!")
 
     prune = False
-    current_step_of_complete_nested_cross_validation = len(
+    current_cross_validation_step = len(
         validation_metric_history
     )  # number of all steps s calculated so far
 
     # consider range for pruning
-    if start_step < current_step_of_complete_nested_cross_validation <= stop_step:
+    if start_step < current_cross_validation_step <= stop_step:
 
         # change sign to adapt the calculations to maximize as direction to optimize
         if not direction_to_optimize_is_minimize:
@@ -145,35 +143,26 @@ def should_prune_against_threshold(
 
         # extrapolate metric up to the next complete loop of the inner k-fold cross-validation  # noqa: E501
         result_already_calculated_steps = (
-                median(validation_metric_history) * current_step_of_complete_nested_cross_validation
+            median(validation_metric_history) * current_cross_validation_step
         )
 
         #  extrapolate remaining steps of current inner cross-validation loop
         #  no extrapolation if inner cross-validation loop is complete
 
-        # calculate number of steps up to the next completed inner cross-validation loop
-        current_step_inner_cv = current_step_of_complete_nested_cross_validation % folds_inner_cv
-        if current_step_inner_cv == 0:  # inner cross-validation loop is complete
-            remaining_steps_of_inner_cross_validation_loop = (
-                0  # no missing steps m until the next complete inner cross-validation loop
-            )
-        else:
-            remaining_steps_of_inner_cross_validation_loop = (
-                    folds_inner_cv - current_step_inner_cv
-            )  # number of missing steps m until the next complete inner cross-validation loop
+        # calculate number of steps up to the completed inner cross-validation loop
+        remaining_steps_of_inner_cross_validation_loop = (
+            folds_inner_cv - current_cross_validation_step
+        )  # number of missing steps m until the complete inner cross-validation loop
 
-        total_steps_up_to_the_next_completed_inner_cv_loop = (
-                current_step_of_complete_nested_cross_validation + remaining_steps_of_inner_cross_validation_loop
-        )
         extrapolated_result_of_remaining_steps_of_the_inner_cv_loop = (
-                extrapolated_metric * remaining_steps_of_inner_cross_validation_loop  # type: ignore
+            extrapolated_metric * remaining_steps_of_inner_cross_validation_loop  # type: ignore
         )
-        extrapolated_result_for_next_complete_inner_cv_loop = (
-                                                                      result_already_calculated_steps + extrapolated_result_of_remaining_steps_of_the_inner_cv_loop
-                                                              ) / total_steps_up_to_the_next_completed_inner_cv_loop
+        extrapolated_result_for_complete_inner_cv_loop = (
+            result_already_calculated_steps + extrapolated_result_of_remaining_steps_of_the_inner_cv_loop
+        ) / folds_inner_cv
 
         # extrapolated results worse than threshold?
-        prune = threshold_for_pruning < extrapolated_result_for_next_complete_inner_cv_loop
+        prune = threshold_for_pruning < extrapolated_result_for_complete_inner_cv_loop
 
     return prune
 

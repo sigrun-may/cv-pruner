@@ -17,6 +17,7 @@ from sklearn.model_selection import LeaveOneOut, StratifiedKFold
 from cv_pruner import Method, cv_pruner
 from data_loader.data_loader import load_colon_data
 
+
 # Parse the data
 label, data = load_colon_data()
 
@@ -87,14 +88,14 @@ def _optuna_objective(trial):
                 raise TrialPruned()
 
             if cv_pruner.should_prune_against_threshold(
-                    folds_inner_cv=inner_folds,
-                    validation_metric_history=validation_metric_history,
-                    threshold_for_pruning=0.45,
-                    start_step=4,
-                    stop_step=int(data.shape[0] / 3),
-                    direction_to_optimize_is_minimize=True,
-                    method=Method.MAX_DEVIATION_TO_MEDIAN,
-                    # optimal_metric=0,  # optimal metric for logloss
+                folds_inner_cv=inner_folds,
+                validation_metric_history=validation_metric_history,
+                threshold_for_pruning=0.45,
+                start_step=4,
+                stop_step=int(data.shape[0] / 3),
+                direction_to_optimize_is_minimize=True,
+                method=Method.MAX_DEVIATION_TO_MEDIAN,
+                # optimal_metric=0,  # optimal metric for logloss
             ):
                 # Report intermediate results before stopping the trial
                 trial.report(trim_mean(validation_metric_history, proportiontocut=0.2), outer_fold_index)

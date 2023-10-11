@@ -8,7 +8,8 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-NUMBER_OF_TRIALS = 40
+
+NUMBER_OF_TRIALS = 60
 
 
 def get_title(experiment_name):
@@ -24,11 +25,18 @@ def get_title(experiment_name):
 
 
 def plot_errors(complete_df, experiment_name):
+
+    # rename column
+    plot_df = complete_df.copy()
+    plot_df.rename(
+        columns={"difference_threshold": "Margin of error falsely pruned trials against threshold"}, inplace=True
+    )
+
     sns.set_theme(style="whitegrid")
     sns.set_context("paper", font_scale=1.5)
     sns.set(rc={"figure.figsize": (4, 3)})
-    g = sns.FacetGrid(complete_df, col="method")
-    g.map_dataframe(sns.histplot, x="difference_threshold", binwidth=0.0005)
+    g = sns.FacetGrid(plot_df, col="method")
+    g.map_dataframe(sns.histplot, x="Margin of error falsely pruned trials against threshold", binwidth=0.0005)
     # g.set(title='Margin of error for falsely pruned trials compared to the threshold')
     plt.suptitle(get_title(experiment_name) + "\n")
     plt.savefig("plots/" + experiment_name + "_hist.pdf")

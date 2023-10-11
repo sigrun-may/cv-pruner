@@ -5,14 +5,17 @@
 
 """TODO: add docstring."""
 
+import joblib
 import numpy as np
 import pandas as pd
-
-import cv_pruner
 import plotter
+import settings
 import simulate_individual_threshold_pruner as pruner_simulation
 
-NUMBER_OF_TRIALS = 40
+import cv_pruner
+
+
+NUMBER_OF_TRIALS = settings.trials_per_study
 
 
 def percent(small, big):
@@ -40,8 +43,8 @@ def fill_df(name, result, df, pruner_threshold):
 
 
 list_of_experiments = [
-    ["colon_cv_pruner", 0.5],
-    ["prostate_cv_pruner", 0.45],
+    ["colon_cv_pruner", 0.2],
+    ["prostate_cv_pruner", 0.2],
     ["leukemia_cv_pruner", 0.2],
 ]
 
@@ -55,9 +58,14 @@ for experiment_name, threshold in list_of_experiments:
         print(method.name)
         print(experiment_name)
         results = pruner_simulation.get_results(method, experiment_name, threshold)
-        # joblib.dump(results, "results/result_" + experiment_name + "_" + method.name + ".pkl.gz", compress=("gzip", 3))
+        joblib.dump(
+            results,
+            "results/result_" + experiment_name + "_" + "12jobs" + "_" + method.name + ".pkl.gz",
+            compress=("gzip", 3),
+        )
+        # results = joblib.load("results/result_" + experiment_name + "_" + '12jobs' + "_" + method.name + ".pkl.gz")
 
-        # results = joblib.load("results/result_" + experiment_name + "-" + method.name + ".pkl.gz")
+        # results = joblib.load("results/result_" + experiment_name + "_" + method.name + ".pkl.gz")
 
         result_df = pd.DataFrame()
         result_df["method"] = np.full(30, method.name.lower())
@@ -71,7 +79,7 @@ for experiment_name, threshold in list_of_experiments:
                 first = False
 
         result_df["difference_best_value"] = (
-                result_df["min_trimmed_mean_pruned_below_threshold"] - result_df["study_best_value"]
+            result_df["min_trimmed_mean_pruned_below_threshold"] - result_df["study_best_value"]
         )
         result_df["difference_threshold"] = np.full(
             len(result_df["min_trimmed_mean_pruned_below_threshold"]), threshold
@@ -125,8 +133,8 @@ for experiment_name, threshold in list_of_experiments:
         {
             "method": np.full(30, "ASHA"),
             "value": complete_df["steps_standard_pruner_percent"].iloc[
-                     (30 * (experiment_count - 1)): (30 * experiment_count)
-                     ],
+                (30 * (experiment_count - 1)) : (30 * experiment_count)
+            ],
             "type of comparison": np.full(30, "saved iterations"),
         }
     )
@@ -135,8 +143,8 @@ for experiment_name, threshold in list_of_experiments:
         {
             "method": np.full(30, "ASHA"),
             "value": complete_df["fails_standard_pruner_percent"].iloc[
-                     (30 * (experiment_count - 1)): (30 * experiment_count)
-                     ],
+                (30 * (experiment_count - 1)) : (30 * experiment_count)
+            ],
             "type of comparison": np.full(30, "correct pruned trials\nagainst threshold"),
         }
     )
@@ -145,22 +153,23 @@ for experiment_name, threshold in list_of_experiments:
         {
             "method": np.full(30, "ASHA"),
             "value": complete_df["fails_standard_pruner_percent"].iloc[
-                     (30 * (experiment_count - 1)): (30 * experiment_count)
-                     ],
+                (30 * (experiment_count - 1)) : (30 * experiment_count)
+            ],
             "type of comparison": np.full(30, "completed global best trials\nof full optimization"),
         }
     )
     assert len(standard_pruner_df3["value"]) == 30
 
-    df1 = complete_df[["method", "steps_three_layer_percent"]]
+    df1 = complete_df[["method", "steps_three_layer_percent"]].copy()
     df1.rename(columns={"steps_three_layer_percent": "value"}, inplace=True)
+    # df1.loc[:, "steps_three_layer_percent"] = "value"
     df1["type of comparison"] = "saved iterations"
 
-    df2 = complete_df[["method", "trimmed_mean_below_threshold_percent"]]
+    df2 = complete_df[["method", "trimmed_mean_below_threshold_percent"]].copy()
     df2.rename(columns={"trimmed_mean_below_threshold_percent": "value"}, inplace=True)
     df2["type of comparison"] = "correct pruned trials\nagainst threshold"
 
-    df3 = complete_df[["method", "global_fails_threshold_pruner_percent"]]
+    df3 = complete_df[["method", "global_fails_threshold_pruner_percent"]].copy()
     df3.rename(columns={"global_fails_threshold_pruner_percent": "value"}, inplace=True)
     df3["type of comparison"] = "completed global best trials\nof full optimization"
 
